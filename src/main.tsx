@@ -84,7 +84,8 @@ function App(){
  const teamPage=route.startsWith('/team/');
  const section=sections.find(s=>route===(teamPage?'/team/':'/sections/')+sectionSlug(s));
  const initialOfficer=route.match(/^\/officers\/([0-9a-f-]{36})$/i)?.[1];
- const initialStatus=statuses.find(status=>route==='/tickets/'+status.toLowerCase().replaceAll(' ','-'));
- return <Desk key={route} section={section} teamPage={teamPage} initialStatus={initialStatus} initialOfficer={initialOfficer}/>;
+ const portalPage=route==='/'||route==='/my'||route.startsWith('/my/');
+ const initialStatus=statuses.find(status=>route===(portalPage?'/my/':'/tickets/')+status.toLowerCase().replaceAll(' ','-'));
+ return <Desk key={route} section={section} teamPage={teamPage} portalPage={portalPage} initialStatus={initialStatus} initialOfficer={initialOfficer}/>;
 }
 createRoot(document.getElementById('root')!).render(<App/>);

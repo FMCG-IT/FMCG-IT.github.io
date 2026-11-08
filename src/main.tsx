@@ -1,3 +1,4 @@
+import {ticketLabel} from './ticket-label';
 import {useEffect,useState,type FormEvent} from 'react';
 import {createRoot} from 'react-dom/client';
 import {Monitor} from 'lucide-react';
@@ -40,7 +41,7 @@ function Auth({mode,setMode}:{mode:Mode;setMode:(m:Mode)=>void}){
  </main>;
 }
 
-type Tracking={id:string;title:string;status:string;officer:string;total:number;updates:{id:string;created:string;author:string;body:string}[]};
+type Tracking={id:string;ticket_number?:number;title:string;status:string;officer:string;total:number;updates:{id:string;created:string;author:string;body:string}[]};
 function Track({token}:{token:string}){
  const [result,setResult]=useState<Tracking|null>(),[failed,setFailed]=useState(false),[loadingMore,setLoadingMore]=useState(false),[moreError,setMoreError]=useState('');
  useEffect(()=>{let cancelled=false;void (async()=>{try{
@@ -58,7 +59,7 @@ function Track({token}:{token:string}){
  if(failed)return <main className="tracking"><h1>Could not load tracking</h1><p>Try refreshing the page.</p></main>;
  if(result===undefined)return <main className="tracking"><h1>Loading ticket…</h1></main>;
  if(!result)return <main className="tracking"><h1>Tracking link unavailable</h1><p>Contact your IT team for a valid link.</p></main>;
- return <main className="tracking"><div className="brand">IT Desk <span>SUPPORT TRACKING</span></div><p className="eyebrow">{result.id}</p><h1>{result.title}</h1><span className="badge">{result.status}</span><p>Your IT officer: <b>{result.officer}</b></p><h2>Progress updates</h2>
+ return <main className="tracking"><div className="brand">IT Desk <span>SUPPORT TRACKING</span></div><p className="eyebrow">{ticketLabel(result)}</p><h1>{result.title}</h1><span className={'badge '+result.status.toLowerCase().replaceAll(' ','-')}>{result.status}</span><p>Your IT officer: <b>{result.officer}</b></p><h2>Progress updates</h2>
  {result.updates.map(u=><article className="event" key={u.id}><small>{new Date(u.created).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} · {u.author}</small><p>{u.body}</p></article>)}
  {moreError&&<p role="alert" className="error">{moreError}</p>}
  {result.updates.length<result.total&&<button className="secondary" disabled={loadingMore} onClick={()=>void more()}>{loadingMore?'Loading…':'Load older updates'}</button>}

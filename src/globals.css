@@ -111,3 +111,14 @@
 .storage-panel>p{font-size:12px}
 .storage-warning{color:#925f1b;background:#fff5df;padding:12px;border-radius:6px}
 @media(max-width:700px){.storage-metrics{grid-template-columns:1fr;gap:12px}.storage-metrics strong{font-size:21px;margin-top:3px}.ticket-pagination{padding-inline:10px;flex-wrap:wrap}}
+
+/* Consistent status colors across dashboard cards, member counts and badges. */
+.status-new-ticket,.badge.new-ticket{--status-bg:#feeeee;--status-border:#efbcbc;--status-ink:#963b3b}
+.status-in-progress,.badge.in-progress{--status-bg:#fff5d6;--status-border:#e6ce82;--status-ink:#77570d}
+.status-closed,.badge.closed{--status-bg:#e7f5eb;--status-border:#b1d8bd;--status-ink:#28633d}
+.stats .stat-link{background:var(--status-bg,#fff);border-color:var(--status-border,var(--line));color:var(--status-ink,var(--ink))}
+.stats .stat-link>div,.stats .stat-link small{color:var(--status-ink,var(--muted))}
+.stats .stat-link .dot{background:var(--status-ink)}
+.stats .stat-link:hover{background:var(--status-bg,#fff);filter:brightness(.98)}
+.badge.new-ticket,.badge.in-progress,.badge.closed{background:var(--status-bg);color:var(--status-ink)}
+.member-status{background:var(--status-bg);color:var(--status-ink);border-radius:4px;padding:3px 5px}

@@ -71,7 +71,8 @@
 .section-ticket-search svg{width:14px;height:14px;flex:none}
 .section-ticket-search input{margin:0;min-width:0;padding:6px 0;line-height:16px}
 @media(max-width:700px){.ticket-section>.section-head.section-ticket-heading{padding-inline:10px}.section-ticket-heading h2{font-size:14px}.section-ticket-search{flex-basis:150px}}
-.section-tickets td.section-ticket-comment{min-width:160px;max-width:300px;white-space:normal;overflow-wrap:anywhere;line-height:1.5}
+.section-tickets td.section-ticket-comment{width:260px;min-width:160px;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal;line-height:1.35}
+.section-tickets td.section-ticket-comment small{display:inline;margin:0 6px 0 0}
 
 .ticket-section>.section-ticket-heading{flex-wrap:wrap}
 .ticket-table-controls{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0;flex:0 1 355px;margin-left:auto}
@@ -122,3 +123,12 @@
 .stats .stat-link:hover{background:var(--status-bg,#fff);filter:brightness(.98)}
 .badge.new-ticket,.badge.in-progress,.badge.closed{background:var(--status-bg);color:var(--status-ink)}
 .member-status{background:var(--status-bg);color:var(--status-ink);border-radius:4px;padding:3px 5px}
+
+.ticket-table-controls{flex-basis:470px}
+.ticket-table-controls .filter-toggle{padding:6px 9px;gap:5px;font-size:11px}
+.ticket-filter-panel{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;padding:0 16px 12px;border-bottom:1px solid var(--line)}
+.ticket-filter-panel label{margin-top:0;min-width:0}
+.ticket-filter-panel :is(select,input){padding:7px 8px;font-size:11px;margin-top:4px;min-width:0}
+.ticket-filter-panel .filter-reset{grid-column:1/-1;justify-self:end;padding:0}
+@media(max-width:900px){.ticket-filter-panel{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:550px){.ticket-table-controls{flex-basis:100%;flex-wrap:wrap}.ticket-table-controls .section-ticket-search{flex:1;min-width:110px}.ticket-filter-panel{grid-template-columns:repeat(2,minmax(0,1fr));padding-inline:10px}}

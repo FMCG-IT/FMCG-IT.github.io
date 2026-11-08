@@ -100,3 +100,14 @@
 .stat-link{text-decoration:none;color:inherit;cursor:pointer}
 .stat-link:hover{border-color:#81ae99;background:#fafffc}
 .stat-link:focus-visible{outline:2px solid var(--green);outline-offset:3px}
+
+.ticket-pagination{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-top:1px solid var(--line);color:var(--muted);font-size:11px}
+.ticket-pagination>div{display:flex;gap:8px}
+.ticket-pagination .secondary{padding:7px 10px}
+.storage-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:24px 0 18px}
+.storage-metrics span{display:block;color:var(--muted);font-size:11px}
+.storage-metrics strong{display:block;font-size:24px;font-weight:600;margin-top:8px}
+.storage-panel progress{display:block;width:100%;height:12px;accent-color:var(--green)}
+.storage-panel>p{font-size:12px}
+.storage-warning{color:#925f1b;background:#fff5df;padding:12px;border-radius:6px}
+@media(max-width:700px){.storage-metrics{grid-template-columns:1fr;gap:12px}.storage-metrics strong{font-size:21px;margin-top:3px}.ticket-pagination{padding-inline:10px;flex-wrap:wrap}}

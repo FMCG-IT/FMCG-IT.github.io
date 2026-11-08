@@ -40,18 +40,28 @@ function Auth({mode,setMode}:{mode:Mode;setMode:(m:Mode)=>void}){
  </main>;
 }
 
-type Tracking={id:string;title:string;status:string;officer:string;updates:{created:string;author:string;body:string}[]};
+type Tracking={id:string;title:string;status:string;officer:string;total:number;updates:{id:string;created:string;author:string;body:string}[]};
 function Track({token}:{token:string}){
- const [result,setResult]=useState<Tracking|null>(),[failed,setFailed]=useState(false);
+ const [result,setResult]=useState<Tracking|null>(),[failed,setFailed]=useState(false),[loadingMore,setLoadingMore]=useState(false),[moreError,setMoreError]=useState('');
  useEffect(()=>{let cancelled=false;void (async()=>{try{
-  const {data,error}=await supabase!.rpc('desk_track',{p_token:token});
+  const {data,error}=await supabase!.rpc('desk_track_page',{p_token:token,p_offset:0});
   if(error)throw error;if(!cancelled)setResult(data);
  }catch{if(!cancelled)setFailed(true);}})();return ()=>{cancelled=true};},[token]);
+ async function more(){
+  if(!result||loadingMore)return;
+  setLoadingMore(true);setMoreError('');
+  try{const {data,error}=await supabase!.rpc('desk_track_page',{p_token:token,p_offset:result.updates.length});if(error)throw error;
+   if(!data){setResult(null);return;}
+   setResult(previous=>{if(!previous)return previous;const ids=new Set(previous.updates.map(u=>u.id));return {...data,updates:[...previous.updates,...data.updates.filter((u:{id:string})=>!ids.has(u.id))]};});
+  }catch{setMoreError('Could not load older updates. Please try again.');}finally{setLoadingMore(false)}
+ }
  if(failed)return <main className="tracking"><h1>Could not load tracking</h1><p>Try refreshing the page.</p></main>;
  if(result===undefined)return <main className="tracking"><h1>Loading ticket…</h1></main>;
  if(!result)return <main className="tracking"><h1>Tracking link unavailable</h1><p>Contact your IT team for a valid link.</p></main>;
  return <main className="tracking"><div className="brand">IT Desk <span>SUPPORT TRACKING</span></div><p className="eyebrow">{result.id}</p><h1>{result.title}</h1><span className="badge">{result.status}</span><p>Your IT officer: <b>{result.officer}</b></p><h2>Progress updates</h2>
- {result.updates.map((u,i)=><article className="event" key={i}><small>{new Date(u.created).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} · {u.author}</small><p>{u.body}</p></article>)}
+ {result.updates.map(u=><article className="event" key={u.id}><small>{new Date(u.created).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} · {u.author}</small><p>{u.body}</p></article>)}
+ {moreError&&<p role="alert" className="error">{moreError}</p>}
+ {result.updates.length<result.total&&<button className="secondary" disabled={loadingMore} onClick={()=>void more()}>{loadingMore?'Loading…':'Load older updates'}</button>}
  </main>;
 }
 
@@ -83,6 +93,6 @@ function App(){
  const initialOfficer=route.match(/^\/officers\/([0-9a-f-]{36})$/i)?.[1];
  const portalPage=route==='/'||route==='/my'||route.startsWith('/my/');
  const initialStatus=statuses.find(status=>route===(portalPage?'/my/':'/tickets/')+status.toLowerCase().replaceAll(' ','-'));
- return <Desk key={route} section={section} teamPage={teamPage} portalPage={portalPage} initialStatus={initialStatus} initialOfficer={initialOfficer}/>;
+ return <Desk key={route} section={section} teamPage={teamPage} storagePage={route==='/storage'} portalPage={portalPage} initialStatus={initialStatus} initialOfficer={initialOfficer}/>;
 }
 createRoot(document.getElementById('root')!).render(<App/>);

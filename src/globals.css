@@ -96,3 +96,7 @@
 .member-actions{display:flex;gap:14px;padding:0 10px 5px}
 .member-actions .danger{color:#a84638}
 .member-actions .text-button{padding-block:3px}
+
+.stat-link{text-decoration:none;color:inherit;cursor:pointer}
+.stat-link:hover{border-color:#81ae99;background:#fafffc}
+.stat-link:focus-visible{outline:2px solid var(--green);outline-offset:3px}

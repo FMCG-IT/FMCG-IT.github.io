@@ -5,6 +5,7 @@ import type {Session} from '@supabase/supabase-js';
 import Desk from './desk';
 import {appUrl,supabase} from './backend';
 import {sections,sectionSlug} from './it-sections';
+import {statuses} from './ticket-status';
 import './globals.css';
 
 type Mode='login'|'register'|'forgot'|'reset';
@@ -83,6 +84,7 @@ function App(){
  const teamPage=route.startsWith('/team/');
  const section=sections.find(s=>route===(teamPage?'/team/':'/sections/')+sectionSlug(s));
  const initialOfficer=route.match(/^\/officers\/([0-9a-f-]{36})$/i)?.[1];
- return <Desk key={route} section={section} teamPage={teamPage} initialOfficer={initialOfficer}/>;
+ const initialStatus=statuses.find(status=>route==='/tickets/'+status.toLowerCase().replaceAll(' ','-'));
+ return <Desk key={route} section={section} teamPage={teamPage} initialStatus={initialStatus} initialOfficer={initialOfficer}/>;
 }
 createRoot(document.getElementById('root')!).render(<App/>);

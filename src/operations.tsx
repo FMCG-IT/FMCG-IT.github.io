@@ -1,12 +1,20 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useState,useRef} from 'react';
 import {readNotifications,writeDesk} from './backend';
 export const automaticDueAt=(t:{created:string})=>Date.parse(t.created)+30*24*60*60*1000;
 export const overdue=(t:{status:string;created:string},now=Date.now())=>t.status!=='Closed'&&Number.isFinite(automaticDueAt(t))&&now>=automaticDueAt(t);
 export function Notifications({openTicket}:{openTicket:(id:string)=>void}){
+ const container=useRef<HTMLDivElement>(null);
+
  const [data,setData]=useState<Awaited<ReturnType<typeof readNotifications>>>({unread:0,items:[]}),[error,setError]=useState(''),[open,setOpen]=useState(false);
  useEffect(()=>{let active=true;const refresh=()=>{if(document.visibilityState==='hidden')return;void readNotifications().then(r=>{if(active){setData(r);setError('')}}).catch((e:Error)=>{if(active)setError(e.message)});};refresh();const timer=setInterval(refresh,30000);document.addEventListener('visibilitychange',refresh);return()=>{active=false;clearInterval(timer);document.removeEventListener('visibilitychange',refresh)}},[]);
+ useEffect(()=>{
+  if(!open)return;
+  const dismiss=(event:PointerEvent)=>{if(event.target instanceof Node&&!container.current?.contains(event.target))setOpen(false)};
+  document.addEventListener('pointerdown',dismiss,true);
+  return ()=>document.removeEventListener('pointerdown',dismiss,true);
+ },[open]);
  async function select(item:typeof data.items[number]){openTicket(item.ticket);setOpen(false);try{setData(await readNotifications(item.ticket,item.updated_at))}catch(e){setError(e instanceof Error?e.message:'Could not mark as read')}}
- return <div className="notifications"><button className="secondary" aria-expanded={open} onClick={()=>setOpen(!open)}>Notifications {data.unread>0&&<b>({data.unread})</b>}</button>{open&&<section className="panel notification-list"><h3>Notifications</h3><small>Latest 30 ticket conversations · refreshes every 30 seconds</small>{error&&<p className="error" role="alert">{error}</p>}{!data.items.length&&!error&&<p>No notifications yet.</p>}{data.items.map(item=><button key={item.ticket} className={'notification-item'+(!item.read_at?' unread':'')} onClick={()=>void select(item)}>{item.message}<small>{new Date(item.updated_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} BDT</small></button>)}</section>}</div>;
+ return <div ref={container} className="notifications"><button className="secondary" aria-expanded={open} onClick={()=>setOpen(!open)}>Notifications {data.unread>0&&<b>({data.unread})</b>}</button>{open&&<section className="panel notification-list"><h3>Notifications</h3><small>Latest 30 ticket conversations · refreshes every 30 seconds</small>{error&&<p className="error" role="alert">{error}</p>}{!data.items.length&&!error&&<p>No notifications yet.</p>}{data.items.map(item=><button key={item.ticket} className={'notification-item'+(!item.read_at?' unread':'')} onClick={()=>void select(item)}>{item.message}<small>{new Date(item.updated_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} BDT</small></button>)}</section>}</div>;
 }
 export function ManagerTransfer({team,onDone}:{team:any[];onDone:()=>Promise<void>}){
  const [target,setTarget]=useState(''),[confirmation,setConfirmation]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[open,setOpen]=useState(false);

@@ -57,3 +57,10 @@ export async function readStorage(){
  if(error)throw Error(error.message);
  return data;
 }
+
+export async function readReport(from:string|null,to:string|null,includeTickets=false){
+ if(!supabase)throw Error('Supabase is not configured.');
+ const {data,error}=await supabase.rpc('desk_report',{p_from:from,p_to:to,p_export:includeTickets});
+ if(error)throw Error(error.message);
+ return data as import('./report-types').TicketReportData;
+}

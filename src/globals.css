@@ -210,3 +210,17 @@ footer{color:#7a738c}
 footer .dot{background:#9e80c5}
 @media(max-width:700px){.sidebar{border-bottom-color:#604576}.sidebar nav{overflow-x:auto}.sidebar .nav{flex:0 0 auto;width:auto}}
 @media(prefers-reduced-motion:reduce){button,a{transition:none}}
+
+.report-controls{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.report-controls label{margin:0;flex:1;min-width:170px}
+.report-controls .primary,.report-controls .secondary{margin:0}
+.report-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0}
+.report-summary .panel{padding:17px}
+.report-summary span,.report-summary small{display:block;color:var(--muted);font-size:11px}
+.report-summary strong{display:block;font-size:25px;margin:10px 0;color:#64508c;font-weight:600;line-height:1.2}
+.report-officers>.section-head{padding:15px 20px 0}
+.report-officers td{cursor:default}
+.report-method{margin-top:16px}
+.report-method p{font-size:12px;line-height:1.8;color:#69728b}
+@media(max-width:1000px){.report-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:500px){.report-summary{grid-template-columns:1fr}.report-controls{padding:16px}.report-controls label{min-width:100%}}

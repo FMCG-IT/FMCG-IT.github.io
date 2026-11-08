@@ -132,3 +132,81 @@
 .ticket-filter-panel .filter-reset{grid-column:1/-1;justify-self:end;padding:0}
 @media(max-width:900px){.ticket-filter-panel{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:550px){.ticket-table-controls{flex-basis:100%;flex-wrap:wrap}.ticket-table-controls .section-ticket-search{flex:1;min-width:110px}.ticket-filter-panel{grid-template-columns:repeat(2,minmax(0,1fr));padding-inline:10px}}
+
+/* Aurora theme: a colorful frame with calm, readable work surfaces. */
+:root{--green:#7251d5;--ink:#293252;--muted:#6f758e;--line:#e3e5f1}
+body{background-color:#f5f4ff;background-image:radial-gradient(ellipse at 7% 3%,#e4eaff 0,transparent 42%),radial-gradient(ellipse at 95% 9%,#fce4f2 0,transparent 40%),radial-gradient(ellipse at 65% 95%,#e1f5fa 0,transparent 44%);background-attachment:fixed;color:var(--ink)}
+button,a,input,textarea,select{outline-color:#7957d9}
+.sidebar{background:linear-gradient(160deg,#1b2858 0%,#30245e 58%,#4e2c63 100%);border-right:1px solid #49376e;box-shadow:5px 0 24px #28215a12;color:#e9e8fc}
+.sidebar .brand{color:#fff}
+.logo{background:linear-gradient(135deg,#765ce5,#c349a7);box-shadow:0 4px 12px #5b3ab62b}
+.sidebar .logo{background:linear-gradient(135deg,#a496ff,#e498d4);color:#241c4b;box-shadow:0 3px 15px #080b3029}
+.sidebar .brand-dot{background:#f8b4cb}
+.sidebar .nav{color:#d2d7ef}
+.sidebar .nav:hover{background:#ffffff0c;color:#fff}
+.sidebar .nav.active{background:linear-gradient(110deg,#7054df,#9941aa);color:#fff;box-shadow:0 5px 14px #090d2d26}
+.sidebar .nav-count{background:#ffffff16;color:#e9e2ff}
+.sidebar .nav.active .nav-count{background:#ffffff25;color:#fff}
+.sidebar .profile{border-top-color:#ffffff20}
+.sidebar .profile small{color:#c2c5df}
+.sidebar .profile .avatar{background:linear-gradient(135deg,#e9c9ff,#ffd1bd);color:#592b72}
+.sidebar .profile .icon-button{color:#d4c9ec}
+.topbar{background:linear-gradient(90deg,#ffffffee,#faf6ffee);border-bottom-color:#e1dff2;color:#79809b}
+.topbar b{color:#63508d}
+.topbar .secure{color:#6d6691}
+.topbar .secure>span{background:#a172da;box-shadow:0 0 0 3px #a172da13}
+h1,h2,h3{color:var(--ink)}
+.primary{background:linear-gradient(110deg,#6651d7,#943cab);box-shadow:0 4px 12px #7250d52a;color:#fff}
+.primary:hover{background:linear-gradient(110deg,#5842c3,#833397);box-shadow:0 5px 16px #7250d538}
+.secondary{color:#65509a;border-color:#ddd7f0;background:#fff}
+.secondary:hover{background:#f6f2ff;border-color:#c3b4e6}
+.text-button{color:#7456a4}
+.icon-button{color:#8482a5}
+.brand{color:#443462}
+.avatar{background:linear-gradient(135deg,#e4defc,#f6deef);color:#6a4a9a}
+label{color:#626582}
+input,select,textarea{border-color:#dde0ee;color:#343c5b}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #9a7ce5;outline-offset:1px}
+.search{border-color:#dde0ee;background:#fff;color:#9386b3}
+.search:focus-within{border-color:#a68bdf;box-shadow:0 0 0 2px #a68bdf17}
+.search input:focus-visible{outline:none}
+.sub-count{color:#8164a8;background:#f5efff;border-color:#e9def7}
+.panel,.ticket-section,.member-card{border-color:#e1e2f0;box-shadow:0 4px 18px #52407806}
+.ticket-section{background:#fff}
+.ticket-section>.section-ticket-heading{background:linear-gradient(100deg,#fff,#fbf8ff)}
+.ticket-section th{color:#6d5c88;background:#f3effb;border-color:#e9e2f3}
+.ticket-section td{border-bottom-color:#eeedf6;color:#58607b}
+.ticket-section td small{color:#787087}
+.ticket-section .ticket-title{color:#414c72}
+.ticket-section tbody tr:nth-child(even) td{background:#fcfbff}
+.ticket-section tbody tr:hover td{background:#f2eeff}
+.ticket-pagination{background:#fcfaff;color:#85809a}
+.ticket-filter-panel{background:#faf7ff}
+.description{color:#626b85}
+.facts b{color:#394568}
+.event{border-left-color:#cdb8eb}
+.event small{color:#756780}
+.team-section .section-card{position:relative;border-left-width:4px;box-shadow:0 3px 12px #544a7405}
+.team-section .section-card:nth-child(3n+1){background:linear-gradient(115deg,#eafaff,#fff);border-color:#c8e8f2;border-left-color:#35a6c3}
+.team-section .section-card:nth-child(3n+2){background:linear-gradient(115deg,#f3edff,#fff);border-color:#e0d4f8;border-left-color:#9270db}
+.team-section .section-card:nth-child(3n){background:linear-gradient(115deg,#fff0f7,#fff);border-color:#f4d7e6;border-left-color:#d775a7}
+.team-section .section-card:hover{box-shadow:0 4px 15px #7b589d16}
+.officer h3{color:#424568}
+.officer p{color:#6e6782}
+.officer-arrow{color:#9b8bb2}
+.officer-bottom{border-top-color:#e9e4f1;color:#726882}
+.member-card>.officer{background:linear-gradient(125deg,#fff,#fcf9ff)}
+.member-card>.officer:hover{background:#f8f3ff}
+.stats .stat-link{box-shadow:0 3px 12px #53427507}
+.stats .stat-link:focus-visible{outline-color:#8e6ed1}
+.section-empty{background:#ffffff80;border-color:#ded8ee}
+.empty{color:#aaa0be}
+.empty h3{color:#75628b}
+.setup,.tracking{box-shadow:0 12px 45px #58488a0d;border-color:#e0dbee}
+.setup .eyebrow,.tracking .eyebrow{color:#9474b0}
+.overlay{background:#221d4670}
+.dialog{box-shadow:0 22px 70px #23134f30;border:1px solid #e7def1}
+footer{color:#7a738c}
+footer .dot{background:#9e80c5}
+@media(max-width:700px){.sidebar{border-bottom-color:#604576}.sidebar nav{overflow-x:auto}.sidebar .nav{flex:0 0 auto;width:auto}}
+@media(prefers-reduced-motion:reduce){button,a{transition:none}}

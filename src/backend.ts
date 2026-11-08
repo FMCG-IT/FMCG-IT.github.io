@@ -14,6 +14,19 @@ export async function readDesk(){
 }
 export async function writeDesk(payload:Record<string,unknown>){
  if(!supabase)throw Error('Supabase is not configured.');
+ if(payload.action==='officer'){
+  const {data,error}=await supabase.functions.invoke('manage-officers',{body:{name:payload.name,email:payload.email,password:payload.password,specialty:payload.specialty}});
+  if(error){
+   let message=error.message;
+   if('context' in error && error.context instanceof Response){
+    const detail=await error.context.json().catch(()=>null);
+    if(detail?.error)message=detail.error;
+   }
+   throw Error(message);
+  }
+  if(data?.error)throw Error(data.error);
+  return;
+ }
  const {error}=await supabase.rpc('desk_write',{p:payload});
  if(error)throw Error(error.message);
 }

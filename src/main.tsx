@@ -8,7 +8,7 @@ import {sections,sectionSlug} from './it-sections';
 import {statuses} from './ticket-status';
 import './globals.css';
 
-type Mode='login'|'register'|'forgot'|'reset';
+type Mode='login'|'forgot'|'reset';
 function Auth({mode,setMode}:{mode:Mode;setMode:(m:Mode)=>void}){
  const [message,setMessage]=useState(''),[busy,setBusy]=useState(false);
  async function submit(event:FormEvent<HTMLFormElement>){
@@ -16,10 +16,7 @@ function Auth({mode,setMode}:{mode:Mode;setMode:(m:Mode)=>void}){
   const values=new FormData(event.currentTarget),email=String(values.get('email')??''),password=String(values.get('password')??'');
   setBusy(true);setMessage('');
   try{
-   if(mode==='register'){
-    const {error}=await supabase.auth.signUp({email,password,options:{emailRedirectTo:appUrl()}});
-    if(error)throw error;setMessage('Check your email for the confirmation link. Then sign in to IT Desk.');
-   }else if(mode==='forgot'){
+   if(mode==='forgot'){
     const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:appUrl()+'?reset=1'});
     if(error)throw error;setMessage('If the account exists, a reset link will arrive by email.');
    }else if(mode==='reset'){
@@ -31,7 +28,7 @@ function Auth({mode,setMode}:{mode:Mode;setMode:(m:Mode)=>void}){
   }catch(error){setMessage(error instanceof Error?error.message:'Something went wrong. Try again.');}
   finally{setBusy(false);}
  }
- const label={login:'Sign in',register:'Create account',forgot:'Send reset email',reset:'Save new password'}[mode];
+ const label={login:'Sign in',forgot:'Send reset email',reset:'Save new password'}[mode];
  return <main className="setup"><div className="logo"><Monitor size={20}/></div><p className="eyebrow">IT DESK</p><h1>{label}</h1>
  <form onSubmit={submit}>
  {mode!=='reset'&&<label>Email<input type="email" name="email" required autoComplete="email"/></label>}
@@ -39,7 +36,7 @@ function Auth({mode,setMode}:{mode:Mode;setMode:(m:Mode)=>void}){
  <button className="primary" disabled={busy}>{busy?'Please wait…':label}</button>
  </form>
  {message&&<p role="status">{message}</p>}
- {mode==='login'?<div className="auth-actions"><button className="text-button" onClick={()=>{setMessage('');setMode('register')}}>Create account</button><button className="text-button" onClick={()=>{setMessage('');setMode('forgot')}}>Forgot password?</button></div>:<button className="text-button" onClick={()=>{setMessage('');setMode('login')}}>Back to sign in</button>}
+ {mode==='login'?<div className="auth-actions"><button className="text-button" onClick={()=>{setMessage('');setMode('forgot')}}>Forgot password?</button></div>:<button className="text-button" onClick={()=>{setMessage('');setMode('login')}}>Back to sign in</button>}
  </main>;
 }
 

@@ -4,7 +4,7 @@ import {Monitor} from 'lucide-react';
 import type {Session} from '@supabase/supabase-js';
 import Desk from './desk';
 import {appUrl,supabase} from './backend';
-import {sections} from './it-sections';
+import {sections,sectionSlug} from './it-sections';
 import './globals.css';
 
 type Mode='login'|'register'|'forgot'|'reset';
@@ -80,8 +80,9 @@ function App(){
  if(route.startsWith('/track/'))return <Track key={route} token={route.slice(7)}/>;
  if(session===undefined)return <main className="loading">Loading IT Desk…</main>;
  if(!session||mode==='reset')return <>{callbackError&&<p role="alert" className="error">{callbackError}</p>}<Auth mode={mode} setMode={setMode}/></>;
- const section=sections.find(s=>route==='/sections/'+s.toLowerCase());
+ const teamPage=route.startsWith('/team/');
+ const section=sections.find(s=>route===(teamPage?'/team/':'/sections/')+sectionSlug(s));
  const initialOfficer=route.match(/^\/officers\/([0-9a-f-]{36})$/i)?.[1];
- return <Desk key={route} section={section} initialOfficer={initialOfficer}/>;
+ return <Desk key={route} section={section} teamPage={teamPage} initialOfficer={initialOfficer}/>;
 }
 createRoot(document.getElementById('root')!).render(<App/>);

@@ -64,3 +64,8 @@ export async function readReport(from:string|null,to:string|null,includeTickets=
  if(error)throw Error(error.message);
  return data as import('./report-types').TicketReportData;
 }
+export async function readNotifications(ticket:string|null=null,seenAt:string|null=null){
+ if(!supabase)throw Error('Supabase is not configured.');
+ const {data,error}=await supabase.rpc('desk_notifications',{p_ticket:ticket,p_seen_at:seenAt});
+ if(error)throw Error(error.message);return data as {unread:number;items:{ticket:string;message:string;updated_at:string;read_at:string|null}[]};
+}

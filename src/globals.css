@@ -227,3 +227,12 @@ footer .dot{background:#9e80c5}
 .notifications{position:relative;margin-left:auto;margin-right:16px}.notification-list{position:absolute;right:0;top:48px;width:min(400px,85vw);z-index:40;max-height:60vh;overflow:auto;box-shadow:0 14px 40px #30205d22}.notification-item{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #e6e2f0;background:transparent;padding:12px;color:inherit;cursor:pointer}.notification-item small{display:block;margin-top:5px;color:#778097}.notification-item.unread{background:#f1eaff;font-weight:600}.overdue-label{color:#bf3445!important;font-weight:600}.ticket-overdue{background:#fff4f4!important}.manager-transfer{margin-top:20px}.manager-transfer form{max-width:520px;margin-top:16px}
 .sidebar .profile .icon-button{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;min-height:40px}.sidebar .profile .icon-button span{font-size:11px}.section-logout{margin:8px 0 12px auto;display:flex}
 @media(max-width:700px){.shell .sidebar .profile{display:flex;margin-top:12px;padding-top:10px;border-top:1px solid #ffffff20;gap:9px}.sidebar .profile .avatar{width:32px;height:32px}.sidebar .profile b{max-width:180px}.sidebar .profile .icon-button{padding:8px 10px;color:#fff;background:#ffffff12;border-radius:7px}.sidebar .profile .icon-button span{font-size:12px}}
+/* Priority colors remain readable on their light backgrounds. */
+.priority.low,.tone-low{--priority-ink:#15803d;--priority-bg:#e9f9ee;--priority-border:#a8dfb9}
+.priority.medium,.tone-medium{--priority-ink:#956000;--priority-bg:#fff6c9;--priority-border:#ebd46a}
+.priority.high,.tone-high{--priority-ink:#b84308;--priority-bg:#fff0df;--priority-border:#f0b077}
+.priority.critical,.priority.urgent,.tone-critical,.tone-urgent{--priority-ink:#c52435;--priority-bg:#ffeaed;--priority-border:#f0a5af}
+.priority{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:6px;font-weight:750;color:var(--priority-ink);background:var(--priority-bg);border:1px solid var(--priority-border);white-space:nowrap}.priority .dot{background:currentColor}
+select.priority-select{font-weight:750;color:var(--priority-ink,#384762);background-color:var(--priority-bg,#fff);border-color:var(--priority-border,#dce5dd)}
+select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);background-color:var(--priority-bg,#fff)}
+.facts .priority{font-size:12px}

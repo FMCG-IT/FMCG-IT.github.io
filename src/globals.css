@@ -236,3 +236,5 @@ footer .dot{background:#9e80c5}
 select.priority-select{font-weight:750;color:var(--priority-ink,#384762);background-color:var(--priority-bg,#fff);border-color:var(--priority-border,#dce5dd)}
 select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);background-color:var(--priority-bg,#fff)}
 .facts .priority{font-size:12px}
+
+.brand-home{text-decoration:none;cursor:pointer}.brand-home:focus-visible{outline:2px solid #c4a5ff;outline-offset:5px;border-radius:8px}

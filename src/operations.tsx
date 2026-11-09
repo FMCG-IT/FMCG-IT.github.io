@@ -1,7 +1,9 @@
 import {useEffect,useState,useRef} from 'react';
 import {readNotifications,writeDesk} from './backend';
-export const automaticDueAt=(t:{created:string})=>Date.parse(t.created)+30*24*60*60*1000;
-export const overdue=(t:{status:string;created:string},now=Date.now())=>t.status!=='Closed'&&Number.isFinite(automaticDueAt(t))&&now>=automaticDueAt(t);
+export const overdueDays=(priority:string)=>({Low:30,Medium:10,High:3,Critical:1,Urgent:1}[priority]??10);
+export const priorityLabel=(priority:string)=>priority==='Critical'?'Urgent':priority;
+export const automaticDueAt=(t:{created:string;priority:string})=>Date.parse(t.created)+overdueDays(t.priority)*24*60*60*1000;
+export const overdue=(t:{status:string;created:string;priority:string},now=Date.now())=>t.status!=='Closed'&&Number.isFinite(automaticDueAt(t))&&now>=automaticDueAt(t);
 export function Notifications({openTicket}:{openTicket:(id:string)=>void}){
  const container=useRef<HTMLDivElement>(null);
 

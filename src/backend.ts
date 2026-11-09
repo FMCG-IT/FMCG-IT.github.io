@@ -33,9 +33,9 @@ export async function writeDesk(payload:Record<string,unknown>){
 }
 export async function signOut(){await supabase?.auth.signOut();}
 
-export async function readTickets(options:{search:string;status:string;assignee:string|null;section:string|null;page:number;priority:string|null;createdFrom:string|null;createdTo:string|null}){
+export async function readTickets(options:{search:string;status:string;assignee:string|null;section:string|null;page:number;priority:string|null;createdFrom:string|null;createdTo:string|null;sort:string}){
  if(!supabase)throw Error('Supabase is not configured.');
- const {data,error}=await supabase.rpc('desk_ticket_list_filtered',{p_search:options.search,p_status:options.status==='All statuses'?null:options.status,p_assignee:options.assignee,p_section:options.section,p_offset:options.page*TICKET_PAGE_SIZE,p_limit:TICKET_PAGE_SIZE,p_priority:options.priority,p_created_from:options.createdFrom,p_created_to:options.createdTo});
+ const {data,error}=await supabase.rpc('desk_ticket_list_filtered',{p_search:options.search,p_status:options.status==='All statuses'?null:options.status,p_assignee:options.assignee,p_section:options.section,p_offset:options.page*TICKET_PAGE_SIZE,p_limit:TICKET_PAGE_SIZE,p_priority:options.priority,p_created_from:options.createdFrom,p_created_to:options.createdTo,p_sort:options.sort});
  if(error)throw Error(error.message);
  return data as {items:any[];total:number};
 }

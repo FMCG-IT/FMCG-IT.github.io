@@ -48,6 +48,7 @@ async function loadMoreHistory(){
  });}catch(e){setError(e instanceof Error?e.message:'Could not load older updates.')}finally{setHistoryBusy(false)}
 }
 useEffect(()=>{load().catch((error:Error)=>setError(error.message))},[]);
+useEffect(()=>{if(!data?.me.id)return;let active=true;const refresh=()=>{if(document.visibilityState==='hidden')return;void readDesk().then(result=>{if(active)setData(result)}).catch(()=>{});};const timer=setInterval(refresh,60000);window.addEventListener('focus',refresh);return()=>{active=false;clearInterval(timer);window.removeEventListener('focus',refresh)}},[data?.me.id]);
 async function submit(e:React.FormEvent<HTMLFormElement>,action:string){
  e.preventDefault();setBusy(true);setError('');
  const form=e.currentTarget;const formData=new FormData(form);const values:Record<string,any>=Object.fromEntries(formData);if(action==='officer'||action==='officer_edit'){values.offices=formData.getAll('offices');if(!values.offices.length){setError('Select at least one responsible office / area.');setBusy(false);return;}}if(action==='ticket_edit'&&t)values.due_at=new Date(automaticDueAt({...t,priority:String(values.priority)})).toISOString();
@@ -123,8 +124,11 @@ return <div className="shell"><aside className="sidebar"><a className="brand bra
 {(view==='Overview'||view==='My portal')&&<div className="stats">{[[Ticket,'New ticket',count('New ticket'),'Awaiting action'],[Activity,'In progress',count('In progress'),'Being worked on'],[CheckCircle2,'Closed',count('Closed'),'Issues taken care of']].map(([Icon,label,note,sub]:any,i)=><a className={'stat stat-link status-'+label.toLowerCase().replaceAll(' ','-')} href={(view==='My portal'?'#/my/':'#/tickets/')+label.toLowerCase().replaceAll(' ','-')} key={label}><div><span>{label}</span><Icon size={18}/></div><strong>{note.toString().padStart(2,'0')}</strong><small><i className={'dot d'+i}/>{sub}</small></a>)}</div>}
 {(view==='Overview'||view==='IT team')&&<section className="team-section"><div className="section-head"><div><h2>IT sections <span className="sub-count">{sections.length}</span></h2></div></div><div className="officer-grid">{sections.map(group=>{
  const officers=members(group);
- const total=officers.reduce((sum:number,o:any)=>sum+activeCount(o.id),0);
- return <a key={group} className="officer section-card" href={(view==='IT team'?'#/team/':'#/sections/')+sectionSlug(group)}>
+ const stats=data.counts.sectionAlerts?.[group];
+ const total=Number(stats?.active??officers.reduce((sum:number,o:any)=>sum+activeCount(o.id),0));
+ const hasOverdue=!!stats?.earliest_due&&Date.parse(stats.earliest_due)<=Date.now();
+ const needsAttention=total>50||hasOverdue;
+ return <a key={group} className={'officer section-card'+(needsAttention?' section-alert':'')} title={needsAttention?[(total>50?'More than 50 active tickets':''),(hasOverdue?'Overdue ticket present':'')].filter(Boolean).join(' · '):undefined} href={(view==='IT team'?'#/team/':'#/sections/')+sectionSlug(group)}>
  <ArrowUpRight className="officer-arrow" size={14} aria-hidden="true"/>
  <h3>{group}</h3><p>{view==='IT team'?officers.length+' members':total+' active '+(total===1?'ticket':'tickets')}</p>
  </a>;

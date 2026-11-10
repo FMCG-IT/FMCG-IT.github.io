@@ -14,6 +14,6 @@ export default function StoragePanel(){
  <progress aria-label="Database usage against reference quota" value={Math.min(percent,100)} max={100}/><p>{percent.toFixed(1)}% of the reference quota</p>
  {percent>=80&&<p className="storage-warning">Database usage is approaching or above the reference quota. Review Supabase Usage before adding large amounts of data.</p>}
  <div className="facts"><span>IT Desk tables & indexes<b>{mb(usage.app_bytes)}</b></span><span>Tickets<b>{usage.ticket_count.toLocaleString()}</b></span><span>Activity entries<b>{usage.update_count.toLocaleString()}</b></span><span>Checked — Bangladesh time<b>{new Date(usage.checked_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})}</b></span></div>
- <p className="muted">Measured PostgreSQL database size includes accounts, data and indexes. Remaining space is an estimate against the configured reference quota, not an official Supabase billing or disk-space reading. File storage and monthly data transfer are separate. Check Supabase Usage for plan limits.</p></>}
+</>}
  </section>;
 }

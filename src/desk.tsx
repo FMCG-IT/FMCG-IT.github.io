@@ -91,7 +91,7 @@ const ticketDetails=selected&&t?<><button className="text-button" onClick={()=>s
     <td><span className={'priority '+ticket.priority.toLowerCase()}><i className="dot"/>{priorityLabel(ticket.priority)}</span></td>
     <td><span className={'badge '+ticket.status.toLowerCase().replaceAll(' ','-')}>{ticket.status}</span></td>
     <td><time dateTime={updatedAt}>{dhakaTime.format(new Date(updatedAt))}</time></td>
-    <td className="section-ticket-comment">{comment?<>{comment.internal===1&&<small>Internal note</small>}{comment.body}</>:<span className="muted">No comment yet</span>}</td>
+    <td className="section-ticket-comment">{comment?comment.body:<span className="muted">No comment yet</span>}</td>
    </tr>})}</tbody>
   </table></div>:<p className="muted section-ticket-empty">{(debouncedQuery||status!=='All statuses')?'No matching tickets.':section?'No tickets assigned to this section yet.':view==='My portal'?'No tickets assigned to you yet.':filter?'No tickets assigned to this officer yet.':'No tickets yet.'}</p>}
 

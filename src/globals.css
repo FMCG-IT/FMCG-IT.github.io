@@ -268,3 +268,27 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
 .manager-reports .report-officers>.section-head{padding:9px 12px;margin:0}
 .manager-reports .report-officers th,.manager-reports .report-officers td{padding:8px 12px}
 @media(max-width:700px){.report-layout{grid-template-columns:minmax(0,1fr);gap:8px}.report-member-list{max-height:175px;overflow:auto}}
+/* Overview keeps controls in place while the ticket rows scroll. */
+.overview-frozen .overview-actions{display:none}
+.shell.overview-frozen .topbar{height:44px;gap:8px;flex:none}
+.overview-frozen .topbar :is(.primary,.secondary){padding:7px 10px;min-height:31px}
+.overview-frozen .topbar .notifications{margin-right:0}
+.shell.overview-frozen .content{padding-top:9px;padding-bottom:20px}
+.shell.overview-frozen :is(.stats,.team-section){margin-bottom:8px}
+.overview-frozen .stat{padding:6px 10px;min-height:46px}
+.overview-frozen .stat strong{font-size:21px}
+.shell.overview-frozen .team-section>.section-head{margin-bottom:5px}
+.overview-frozen .team-section h2{font-size:15px}
+.overview-frozen .section-card{padding-block:5px}
+.shell.overview-frozen .section-ticket-heading{padding-block:7px;margin-bottom:0}
+.overview-frozen .ticket-pagination{padding-block:6px}
+@media(min-width:701px) and (min-height:520px){
+ .shell.overview-frozen{height:100dvh;min-height:0;overflow:hidden}
+ .overview-frozen .main{display:flex;flex-direction:column;min-height:0}
+ .shell.overview-frozen .content{width:100%;flex:1;min-height:0;display:flex;flex-direction:column}
+ .overview-frozen .content>:not(.section-tickets){flex:none}
+ .overview-frozen .section-tickets{flex:1;min-height:0;display:flex;flex-direction:column}
+ .overview-frozen .section-tickets>:not(.table-scroll){flex:none}
+ .overview-frozen .section-tickets>.table-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+ .overview-frozen .section-tickets thead th{position:sticky;top:0;z-index:2;background:#f1edf9}
+}

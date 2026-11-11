@@ -251,3 +251,20 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
 .regular-work{display:grid;gap:14px}.regular-work-stat{background:#eee8ff;border-color:#ccb9ff}.work-form{display:flex;align-items:end;flex-wrap:wrap;gap:12px}.work-form label:first-child{flex:1 1 220px}.work-form button{margin:0}.work-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.work-row:last-child{border-bottom:0}.work-row small{display:block;color:var(--muted);margin-top:4px}.work-row p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}.work-row>div:first-child{min-width:0;overflow-wrap:anywhere}.work-row .checkbox{margin:0;font-size:13px}.work-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}.work-status{font-size:12px;padding:5px 9px;border-radius:6px;white-space:nowrap}.work-done{background:#dcfce7;color:#166534}.work-pending{background:#fff1c2;color:#854d0e}.work-missed{background:#ffe4e6;color:#9f1239}.regular-work .dialog .work-actions{margin-top:16px}@media(max-width:550px){.work-row{align-items:flex-start;flex-direction:column}.work-actions{justify-content:flex-start}}
 @media(min-width:1051px){.shell .stats{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .manager-reports{display:grid;gap:14px}.report-choices{display:flex;flex-wrap:wrap;gap:9px}.report-picker .report-choices{margin-top:12px}.manager-reports .reports-panel>h2{margin:0 0 12px}
+.manager-reports{gap:10px;padding-bottom:28px}
+.report-layout{display:grid;grid-template-columns:minmax(145px,190px) minmax(0,1fr);gap:12px;align-items:start}
+.report-picker.panel{padding:12px}.report-picker h2{font-size:14px;margin:0 0 9px}
+.report-member-list{display:grid;gap:6px}.report-member-list button{justify-content:flex-start;text-align:left;white-space:normal;overflow-wrap:anywhere;padding:8px 10px}
+.report-result{min-width:0}.report-empty{margin:8px 0}
+.manager-reports .reports-panel>h2{margin:0 0 8px}
+.manager-reports .report-controls{padding:10px 12px;gap:7px 10px}
+.manager-reports .report-controls label{min-width:130px}
+.manager-reports .report-controls input{margin-top:4px;padding:7px 8px}
+.manager-reports .report-controls button{padding:8px 11px}
+.manager-reports .report-scope{margin:6px 0;font-size:11px}
+.manager-reports .report-summary{grid-template-columns:repeat(auto-fit,minmax(min(100%,125px),1fr));gap:8px;margin:8px 0}
+.manager-reports .report-summary .panel{padding:10px 12px}
+.manager-reports .report-summary strong{font-size:21px;margin:5px 0}
+.manager-reports .report-officers>.section-head{padding:9px 12px;margin:0}
+.manager-reports .report-officers th,.manager-reports .report-officers td{padding:8px 12px}
+@media(max-width:700px){.report-layout{grid-template-columns:minmax(0,1fr);gap:8px}.report-member-list{max-height:175px;overflow:auto}}

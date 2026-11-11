@@ -28,9 +28,11 @@ function RegularWorkReport({officer,team}:{officer?:Officer;team:Officer[]}){
 }
 export default function ManagerReports({team}:{team:Officer[]}){
  const [kind,setKind]=useState<'ticket'|'work'>(),[selected,setSelected]=useState<string>();
- const officer=team.find(o=>o.id===selected);
- const switchKind=(value:'ticket'|'work')=>{setKind(value);setSelected(undefined)};
+ const activeMembers=team.filter(o=>!o.archived);
+ const officer=activeMembers.find(o=>o.id===selected);
+ const showReport=selected==='summary'||!!officer;
+ const switchKind=(value:'ticket'|'work')=>{if(value!==kind){setKind(value);setSelected(undefined)}};
  return <div className="manager-reports"><div className="report-choices" aria-label="Report type"><button className={kind==='ticket'?'primary':'secondary'} aria-pressed={kind==='ticket'} onClick={()=>switchKind('ticket')}>Ticket report</button><button className={kind==='work'?'primary':'secondary'} aria-pressed={kind==='work'} onClick={()=>switchKind('work')}>Regular work report</button></div>
- {kind&&<section className="panel report-picker"><h2>Choose a member or summary</h2><div className="report-choices"><button className={selected==='summary'?'primary':'secondary'} aria-pressed={selected==='summary'} onClick={()=>setSelected('summary')}>Summary report</button>{team.map(o=><button title={o.email} key={o.id} className={selected===o.id?'primary':'secondary'} aria-pressed={selected===o.id} onClick={()=>setSelected(o.id)}>{o.name}{o.archived?' (Archived)':''}</button>)}</div></section>}
- {selected&&(kind==='ticket'?<ReportsPanel officerId={officer?.id} officerName={officer?.name}/>:kind==='work'?<RegularWorkReport officer={officer} team={team}/>:null)}</div>;
+ {kind&&<div className="report-layout"><aside className="panel report-picker" aria-label="Report selection"><h2>Members</h2><div className="report-member-list"><button className={selected==='summary'?'primary':'secondary'} aria-pressed={selected==='summary'} onClick={()=>setSelected('summary')}>Summary report</button>{activeMembers.map(o=><button title={o.email} key={o.id} className={selected===o.id?'primary':'secondary'} aria-pressed={selected===o.id} onClick={()=>setSelected(o.id)}>{o.name}</button>)}</div></aside>
+ <div className="report-result">{showReport?(kind==='ticket'?<ReportsPanel officerId={officer?.id} officerName={officer?.name}/>:<RegularWorkReport officer={officer} team={team}/>):<p className="muted report-empty">Select a member or Summary report.</p>}</div></div>}</div>;
 }

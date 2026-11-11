@@ -292,3 +292,5 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
  .overview-frozen .section-tickets>.table-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
  .overview-frozen .section-tickets thead th{position:sticky;top:0;z-index:2;background:#f1edf9}
 }
+.shell.overview-frozen .heading:not(.overview-actions){margin:0 0 7px}
+.shell.overview-frozen .heading h1{font-size:22px;margin:0}

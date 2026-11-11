@@ -330,3 +330,10 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
 /* Shared spacing for ticket and report tables: 2.5px per vertical edge. */
 .ticket-section table :is(th,td){padding-block:2.5px}
 .ticket-section table th .column-sort{padding-block:1px}
+
+.ticket-fit-region{overflow-anchor:none}
+.ticket-fit-region .ticket-row-outside-page{visibility:collapse}
+.section-tickets .ticket-id{white-space:nowrap}
+@media(max-width:700px), (max-height:519px){
+ .section-tickets .ticket-fit-region{max-height:65dvh}
+}

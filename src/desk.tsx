@@ -6,36 +6,63 @@ import PrioritySelect from './priority-select';
 import TeamAssignment,{teamLabel} from './team-assignment';
 import {Notifications,ManagerTransfer,overdue,automaticDueAt,overdueDays,priorityLabel} from './operations';
 import ManagerReports from './manager-reports';
-import {TICKET_PAGE_SIZE} from './pagination';
 import {designations} from './designations';
 import {ticketLabel} from './ticket-label';
 import StoragePanel from './storage-panel';
 import {readDesk,readTickets,readTicket,readHistory,writeDesk,signOut,trackingUrl} from './backend';
-import {useEffect,useState} from 'react';
+import {useEffect,useLayoutEffect,useRef,useState} from 'react';
 import {LayoutDashboard,Ticket,Users,UserRound,Plus,Search,ArrowUpRight,ArrowLeft,Copy,Check,Monitor,Activity,CheckCircle2,LogOut,X,Pencil,Trash2,HardDrive,BarChart3} from 'lucide-react';
 import {sections,sectionFor,sectionSlug,type ITSection} from './it-sections';
 import {statuses} from './ticket-status';
 const dhakaTime=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Dhaka',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true});
-export default function Desk({section,teamPage=false,portalPage=false,storagePage=false,reportsPage=false,workPage=false,initialStatus,initialOfficer=''}:{section?:ITSection;teamPage?:boolean;portalPage?:boolean;storagePage?:boolean;reportsPage?:boolean;workPage?:boolean;initialStatus?:string;initialOfficer?:string}){const [data,setData]=useState<any>(null),[error,setError]=useState(''),[view,setView]=useState(workPage?'Regular work':reportsPage?'Reports':storagePage?'Storage':portalPage?'My portal':location.hash==='#/team'?'IT team':initialStatus||initialOfficer||location.hash==='#/tickets'?'All tickets':'Overview'),[filter,setFilter]=useState(initialOfficer),[query,setQuery]=useState(''),[status,setStatus]=useState(initialStatus??'All statuses'),[modal,setModal]=useState(''),[editing,setEditing]=useState<any>(null),[deleting,setDeleting]=useState<any>(null),[selected,setSelected]=useState(''),[busy,setBusy]=useState(false),[copied,setCopied]=useState(false);const [revision,setRevision]=useState(0),[pageState,setPageState]=useState({key:'',index:0}),[pageResult,setPageResult]=useState<{items:any[];total:number}>({items:[],total:0}),[listLoading,setListLoading]=useState(false),[listError,setListError]=useState(''),[debouncedQuery,setDebouncedQuery]=useState(query),[detail,setDetail]=useState<any>(null),[detailError,setDetailError]=useState(''),[historyBusy,setHistoryBusy]=useState(false);const [sort,setSort]=useState('updated_desc');const [,setClock]=useState(0);useEffect(()=>{const timer=setInterval(()=>setClock(v=>v+1),60000);return()=>clearInterval(timer)},[]);
+export default function Desk({section,teamPage=false,portalPage=false,storagePage=false,reportsPage=false,workPage=false,initialStatus,initialOfficer=''}:{section?:ITSection;teamPage?:boolean;portalPage?:boolean;storagePage?:boolean;reportsPage?:boolean;workPage?:boolean;initialStatus?:string;initialOfficer?:string}){const [data,setData]=useState<any>(null),[error,setError]=useState(''),[view,setView]=useState(workPage?'Regular work':reportsPage?'Reports':storagePage?'Storage':portalPage?'My portal':location.hash==='#/team'?'IT team':initialStatus||initialOfficer||location.hash==='#/tickets'?'All tickets':'Overview'),[filter,setFilter]=useState(initialOfficer),[query,setQuery]=useState(''),[status,setStatus]=useState(initialStatus??'All statuses'),[modal,setModal]=useState(''),[editing,setEditing]=useState<any>(null),[deleting,setDeleting]=useState<any>(null),[selected,setSelected]=useState(''),[busy,setBusy]=useState(false),[copied,setCopied]=useState(false);const [revision,setRevision]=useState(0),[pageState,setPageState]=useState<{key:string;offsets:number[]}>({key:'',offsets:[0]}),[pageResult,setPageResult]=useState<{items:any[];total:number}>({items:[],total:0}),[listLoading,setListLoading]=useState(false),[listError,setListError]=useState(''),[debouncedQuery,setDebouncedQuery]=useState(query),[detail,setDetail]=useState<any>(null),[detailError,setDetailError]=useState(''),[historyBusy,setHistoryBusy]=useState(false);const [sort,setSort]=useState('updated_desc');const [,setClock]=useState(0);useEffect(()=>{const timer=setInterval(()=>setClock(v=>v+1),60000);return()=>clearInterval(timer)},[]);
 const [workSummary,setWorkSummary]=useState({today:'',count:0,approvals:0});
 function refreshWork(){void readWorkSummary().then(setWorkSummary).catch(()=>{});}
 useEffect(()=>{refreshWork();const timer=setInterval(refreshWork,30000);return()=>clearInterval(timer)},[]);
 const listAssignee=view==='My portal'?data?.me.id:filter||null;
 const listSection=section??null;
 const listKey=JSON.stringify([view,listSection,listAssignee,status,debouncedQuery,sort]);
-const pageIndex=pageState.key===listKey?pageState.index:0;
+const offsets=pageState.key===listKey?pageState.offsets:[0];
+const offset=offsets[offsets.length-1];
+const tableRegion=useRef<HTMLDivElement>(null);
+const [fittedRows,setFittedRows]=useState(0);
+useLayoutEffect(()=>{
+ const region=tableRegion.current;
+ if(!region)return;
+ const table=region.querySelector('table');
+ if(!table)return;
+ const rows=Array.from(table.tBodies[0].rows);
+ function fit(){
+  if(!region||!table)return;
+  rows.forEach(row=>row.classList.remove('ticket-row-outside-page'));
+  const top=region.getBoundingClientRect().top+region.clientTop;
+  const boundary=top+region.clientHeight;
+  const scrollTop=region.scrollTop;
+  const firstOverflow=rows.findIndex(row=>row.getBoundingClientRect().bottom+scrollTop>boundary+0.5);
+  const count=firstOverflow<0?rows.length:Math.max(1,firstOverflow);
+  rows.forEach((row,index)=>row.classList.toggle('ticket-row-outside-page',index>=count));
+  setFittedRows(count);
+ }
+ fit();
+ let active=true;
+ const observer=new ResizeObserver(fit);
+ observer.observe(region);
+ window.addEventListener('resize',fit);
+ void document.fonts.ready.then(()=>{if(active)fit()});
+ return ()=>{active=false;observer.disconnect();window.removeEventListener('resize',fit);};
+},[pageResult,listLoading,listError,selected,listKey]);
 async function load(){setData(await readDesk());setRevision(value=>value+1)}
 useEffect(()=>{const timer=setTimeout(()=>setDebouncedQuery(query.trim().slice(0,200)),350);return ()=>clearTimeout(timer)},[query]);
 useEffect(()=>{
  if(!data?.me||view==='IT team'||view==='Storage'||view==='Reports'||view==='Regular work'||teamPage)return;
  let cancelled=false;setListLoading(true);setListError('');
- void readTickets({search:debouncedQuery,status,assignee:listAssignee??null,section:listSection,page:pageIndex,priority:null,createdFrom:null,createdTo:null,sort}).then(result=>{
+ void readTickets({search:debouncedQuery,status,assignee:listAssignee??null,section:listSection,offset,priority:null,createdFrom:null,createdTo:null,sort}).then(result=>{
   if(cancelled)return;
-  if(pageIndex>0&&result.items.length===0&&result.total>0){setPageState({key:listKey,index:Math.max(0,Math.ceil(result.total/TICKET_PAGE_SIZE)-1)});return;}
+  if(offset>0&&result.items.length===0){setPageState(previous=>({...previous,offsets:previous.offsets.slice(0,-1)}));return;}
   setPageResult(result);
  }).catch((e:Error)=>{if(!cancelled)setListError(e.message)}).finally(()=>{if(!cancelled)setListLoading(false)});
  return ()=>{cancelled=true};
-},[data?.me.id,view,teamPage,listSection,listAssignee,status,debouncedQuery,pageIndex,revision,sort]);
+},[data?.me.id,view,teamPage,listSection,listAssignee,status,debouncedQuery,offset,revision,sort]);
 useEffect(()=>{
  if(!selected){setDetail(null);return;}
  let cancelled=false;setDetail(null);setDetailError('');
@@ -82,13 +109,15 @@ const ticketDetails=selected&&t?<><button className="text-button" onClick={()=>s
   <div className="section-head section-ticket-heading"><h2 id="section-tickets-title">{section?'Section tickets':view==='My portal'?(status==='All statuses'?'My tickets':status+' tickets'):filter&&officerNames.has(filter)?officerNames.get(filter)+'’s tickets':initialStatus&&status!=='All statuses'?status+' tickets':'All tickets'}</h2><div className="ticket-table-controls"><label className="search section-ticket-search"><Search size={17} aria-hidden="true"/><input type="search" aria-label={section?'Search section tickets':'Search tickets'} placeholder={section?'Search section tickets…':'Search tickets…'} value={query} maxLength={200} onChange={e=>setQuery(e.target.value)}/></label><select className="ticket-table-status" aria-label="Filter status" value={status} onChange={e=>setStatus(e.target.value)}><option>All statuses</option>{statuses.map(s=><option key={s}>{s}</option>)}</select></div></div>
   {filter&&<button className="text-button ticket-scope-clear" onClick={()=>setFilter('')}>Clear officer filter <X size={14}/></button>}
   {listError&&<p className="error" role="alert">{listError}</p>}
-  {listError?null:listLoading?<p className="muted section-ticket-empty" role="status">Loading tickets…</p>:visibleTickets.length?<div className="table-scroll" tabIndex={0} role="region" aria-label="Ticket table"><table>
+  {listError?null:listLoading?<p className="muted section-ticket-empty" role="status">Loading tickets…</p>:visibleTickets.length?<div className="table-scroll ticket-fit-region" ref={tableRegion} tabIndex={0} role="region" aria-label="Ticket table"><table>
    <thead><tr>{sortableColumns.map(column=>{const active=sort.startsWith(column.key+'_');const direction=active?(sort.endsWith('_asc')?'ascending':'descending'):'none';return <th scope="col" key={column.key} aria-sort={direction}><button type="button" className={'column-sort'+(active?' active':'')} onClick={()=>setSort(nextTicketSort(sort,column.key,column.first))}>{column.label}<span aria-hidden="true">{active?(direction==='ascending'?'↑':'↓'):'↕'}</span></button></th>})}</tr></thead>
    <tbody>{visibleTickets.map((ticket:any)=>{
     const updatedAt=ticket.last_update_at??ticket.created;
     const comment=ticket.last_comment;
     return <tr key={ticket.id} className={'ticket-row'+(overdue(ticket)?' ticket-overdue':'')} onClick={()=>{setError('');setCopied(false);setSelected(ticket.id)}}>
-    <td><small>{ticketLabel(ticket)}</small><button className="ticket-title" onClick={e=>{e.stopPropagation();setError('');setCopied(false);setSelected(ticket.id)}}>{ticket.title}</button>{overdue(ticket)&&<small className="overdue-label">Overdue · {dhakaTime.format(new Date(automaticDueAt(ticket)))}</small>}</td>
+    <td className="ticket-id">{ticketLabel(ticket)}</td>
+    <td><button className="ticket-title" onClick={e=>{e.stopPropagation();setError('');setCopied(false);setSelected(ticket.id)}}>{ticket.title}</button>{overdue(ticket)&&<small className="overdue-label">Overdue · {dhakaTime.format(new Date(automaticDueAt(ticket)))}</small>}</td>
+    <td>{ticket.creator_name??'—'}</td>
     <td>{ticket.assignee_name??officerNames.get(ticket.assignee)}</td>
     <td><span className={'priority '+ticket.priority.toLowerCase()}><i className="dot"/>{priorityLabel(ticket.priority)}</span></td>
     <td><span className={'badge '+ticket.status.toLowerCase().replaceAll(' ','-')}>{ticket.status}</span></td>
@@ -96,7 +125,7 @@ const ticketDetails=selected&&t?<><button className="text-button" onClick={()=>s
     <td className="section-ticket-comment">{comment?<>{comment.internal===1&&<small>Internal note</small>}{comment.body}</>:<span className="muted">No comment yet</span>}</td>
    </tr>})}</tbody>
   </table></div>:<p className="muted section-ticket-empty">{(debouncedQuery||status!=='All statuses')?'No matching tickets.':section?'No tickets assigned to this section yet.':view==='My portal'?'No tickets assigned to you yet.':filter?'No tickets assigned to this officer yet.':'No tickets yet.'}</p>}
- {!listLoading&&!listError&&pageResult.total>0&&<div className="ticket-pagination"><span>{pageIndex*TICKET_PAGE_SIZE+1}–{Math.min((pageIndex+1)*TICKET_PAGE_SIZE,pageResult.total)} of {pageResult.total} tickets</span><div><button className="secondary" disabled={pageIndex===0} onClick={()=>setPageState({key:listKey,index:pageIndex-1})}>Previous</button><button className="secondary" disabled={(pageIndex+1)*TICKET_PAGE_SIZE>=pageResult.total} onClick={()=>setPageState({key:listKey,index:pageIndex+1})}>Next</button></div></div>}
+ {!listLoading&&!listError&&pageResult.total>0&&<div className="ticket-pagination"><span>{offset+1}–{offset+Math.min(fittedRows,pageResult.items.length)} of {pageResult.total} tickets</span><div><button className="secondary" disabled={offset===0} onClick={()=>setPageState({key:listKey,offsets:offsets.slice(0,-1)})}>Previous</button><button className="secondary" disabled={!fittedRows||offset+fittedRows>=pageResult.total} onClick={()=>setPageState({key:listKey,offsets:[...offsets,offset+fittedRows]})}>Next</button></div></div>}
 
  </section>;
 const modalView=modal&&<div className="overlay" onClick={()=>setModal('')}><section className="dialog" role="dialog" aria-modal="true" aria-label={modal==='ticket_edit'?'Edit ticket':modal==='create'?'Create ticket':modal==='officer_edit'?'Edit officer':modal==='officer_delete'?'Delete officer':'Add officer'} onClick={e=>e.stopPropagation()}><div className="section-head"><h2>{modal==='ticket_edit'?'Edit ticket details':modal==='create'?'Create a ticket':modal==='officer_edit'?'Edit IT officer':modal==='officer_delete'?'Delete IT officer':'Add IT officer'}</h2><button className="icon-button" aria-label="Close" onClick={()=>setModal('')}><X/></button></div><p className="muted">{modal==='ticket_edit'?'Update ticket details. Overdue from creation: Low 30 days, Medium 10 days, High 3 days, Urgent 1 day.':modal==='officer_delete'?'Remove team access and transfer assigned tickets. Ticket history is kept.':modal==='create'?'Log the issue, assign an officer, and keep everyone updated.':modal==='officer'?'Set the email and password the officer will use to sign in.':'Use the email they will sign in with.'}</p><form onSubmit={e=>submit(e,modal)}>{modal==='officer_delete'?<><p>Remove <b>{deleting?.name}</b> from the IT team?</p><label>Transfer tickets to<select name="replacement" defaultValue={data.me.id}>{team.filter((o:any)=>o.id!==deleting?.id).map((o:any)=><option key={o.id} value={o.id}>{o.name}</option>)}</select></label></>:modal==='officer'||modal==='officer_edit'?<><label>Full name<input required name="name" defaultValue={editing&&modal==='officer_edit'?editing.name:''} placeholder="Officer’s full name"/></label><label>Account email<input required type="email" name="email" readOnly={modal==='officer_edit'&&editing?.id===data.me.id} defaultValue={editing&&modal==='officer_edit'?editing.email:''} placeholder="name@company.com"/></label>{modal==='officer'&&<label>Login password<input name="password" type="password" required minLength={8} maxLength={72} autoComplete="new-password" placeholder="Set the officer’s password"/></label>}<label>Designation<select name="designation" defaultValue={modal==='officer_edit'?(editing.designation??(editing.manager===1?'Manager':'Officer')):'Officer'}>{designations.map(designation=><option key={designation}>{designation}</option>)}</select></label><label>IT section<select name="specialty" defaultValue={modal==='officer_edit'?sectionFor(editing.specialty):section??'Software/System'}>{sections.map(section=><option key={section}>{section}</option>)}</select></label><OfficeFields key={modal+'-'+(editing?.id??'new')} selected={modal==='officer_edit'?editing?.offices??[]:[]}/></>:<><label>Issue title<input name="title" required maxLength={200} defaultValue={modal==='ticket_edit'?t?.title:''} placeholder="e.g. Accounts printer is not responding"/></label><div className="form-row"><label>Affected employee<input name="employee" required maxLength={200} defaultValue={modal==='ticket_edit'?t?.employee:''} placeholder="Employee name"/></label><label>Department / location<input name="department" maxLength={200} defaultValue={modal==='ticket_edit'?t?.department:''} placeholder="Accounts · Floor 2"/></label></div><div className="form-row"><TeamAssignment key={modal+'-'+(t?.id??'new')} officers={team} initialOfficer={modal==='ticket_edit'?t?.assignee:filter||data.me.id} initialTeam={modal==='create'?section:undefined} initialOffice={modal==='ticket_edit'?t?.office??'':''}/><label>Priority<PrioritySelect key={modal+'-'+(t?.id??'new')} initial={modal==='ticket_edit'?t?.priority:'Medium'}/></label></div><label>Description<textarea name="description" rows={3} maxLength={10000} defaultValue={modal==='ticket_edit'?t?.description:''} placeholder="Describe the issue and any troubleshooting so far…"/></label></>}{error&&<p className="error">{error}</p>}<button className="primary" disabled={busy}>{busy?'Saving…':modal==='ticket_edit'?'Save ticket':modal==='create'?'Create ticket':modal==='officer_edit'?'Save changes':modal==='officer_delete'?'Delete officer':'Add officer'}<ArrowUpRight size={17}/></button></form></section></div>;

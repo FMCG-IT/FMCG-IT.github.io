@@ -35,8 +35,8 @@
 .shell .ticket-section>.section-head{padding-top:14px}
 .shell .ticket-section .filters{padding-bottom:12px}
 .shell .search input{margin-top:0}
-.shell .ticket-section th{padding-block:9px}
-.shell .ticket-section td{padding-block:9px}
+
+
 .shell .ticket-section td small{margin-block:2px}
 .shell .ticket-section .empty{padding:22px 16px}
 .shell .empty h3{margin:8px 0 5px}
@@ -62,7 +62,7 @@
 @media(max-width:700px){.section-page{padding:12px 18px}}
 
 .section-page .section-tickets,.section-page>.officer-grid+.text-button,.section-page>.section-empty+.text-button{margin-top:16px}
-.section-page .ticket-section :is(th,td){padding-block:9px}
+
 .section-ticket-empty{margin:0;padding:0 23px 15px}
 
 .ticket-section>.section-head.section-ticket-heading{gap:8px;padding:9px 16px;margin-bottom:0}
@@ -266,7 +266,7 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
 .manager-reports .report-summary .panel{padding:10px 12px}
 .manager-reports .report-summary strong{font-size:21px;margin:5px 0}
 .manager-reports .report-officers>.section-head{padding:9px 12px;margin:0}
-.manager-reports .report-officers th,.manager-reports .report-officers td{padding:8px 12px}
+.manager-reports .report-officers th,.manager-reports .report-officers td{padding-inline:12px}
 @media(max-width:700px){.report-layout{grid-template-columns:minmax(0,1fr);gap:8px}.report-member-list{max-height:175px;overflow:auto}}
 /* Overview keeps controls in place while the ticket rows scroll. */
 .overview-frozen .overview-actions{display:none}
@@ -320,3 +320,13 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
  .section-list-frozen .section-tickets{margin-top:8px}
  .reports-frozen .manager-reports,.reports-frozen .report-layout{gap:8px}
 }
+/* Compact rows in the shared ticket table. */
+.section-tickets table tbody td{line-height:1.2}
+
+.section-tickets .ticket-title{line-height:1.2;padding-block:0}
+.section-tickets td:first-child small{margin:0 0 2px;line-height:1.1}
+.section-tickets td :is(.badge,.priority){padding-block:3px;line-height:1.2}
+
+/* Shared spacing for ticket and report tables: 2.5px per vertical edge. */
+.ticket-section table :is(th,td){padding-block:2.5px}
+.ticket-section table th .column-sort{padding-block:1px}

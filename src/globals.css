@@ -294,3 +294,29 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
 }
 .shell.overview-frozen .heading:not(.overview-actions){margin:0 0 7px}
 .shell.overview-frozen .heading h1{font-size:22px;margin:0}
+.section-page-actions{display:flex;align-items:center;gap:8px}.section-page-actions .section-logout{margin:0}.section-page-actions .notifications{margin-right:0}
+.section-list-frozen h1{margin:6px 0;font-size:22px}
+@media(min-width:701px) and (min-height:520px){
+ .section-page.section-list-frozen{height:100dvh;min-height:0;margin-block:0;padding-top:10px;padding-bottom:20px;display:flex;flex-direction:column;overflow:hidden}
+ .section-list-frozen>:not(.section-tickets){flex:none}
+ .section-list-frozen .section-tickets,.reports-frozen .report-officers{flex:1;min-height:0;display:flex;flex-direction:column}
+ .section-list-frozen .section-tickets>:not(.table-scroll),.reports-frozen .report-officers>:not(.table-scroll){flex:none}
+ .section-list-frozen .table-scroll,.reports-frozen .report-officers .table-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+ .section-list-frozen thead th,.reports-frozen .report-officers thead th{position:sticky;top:0;z-index:2;background:#f1edf9}
+ .shell.reports-frozen .content>.manager-reports{flex:1;min-height:0;display:flex;flex-direction:column;padding-bottom:0}
+ .reports-frozen .report-layout{flex:1;min-height:0;grid-template-rows:minmax(0,1fr);align-items:stretch}
+ .reports-frozen .report-picker{align-self:start;max-height:100%;overflow:auto}
+ .reports-frozen .report-result,.reports-frozen .reports-panel{min-height:0;display:flex;flex-direction:column}
+ .reports-frozen .reports-panel{flex:1}
+ .reports-frozen .reports-panel>:not(.report-officers){flex:none}
+}
+@media(min-width:701px) and (min-height:520px){
+ .shell.overview-frozen .topbar{height:39px}
+ .shell.overview-frozen .content,.section-page.section-list-frozen{padding-bottom:12px}
+ .shell.overview-frozen .content{padding-top:6px}
+ .shell.overview-frozen .heading:not(.overview-actions){margin-bottom:5px}
+ .shell.overview-frozen .heading h1{font-size:19px}
+ .shell.overview-frozen .section-ticket-heading{padding-block:5px}
+ .section-list-frozen .section-tickets{margin-top:8px}
+ .reports-frozen .manager-reports,.reports-frozen .report-layout{gap:8px}
+}

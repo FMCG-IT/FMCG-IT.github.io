@@ -101,17 +101,13 @@
 .stat-link{text-decoration:none;color:inherit;cursor:pointer}
 .stat-link:hover{border-color:#81ae99;background:#fafffc}
 .stat-link:focus-visible{outline:2px solid var(--green);outline-offset:3px}
-
-.ticket-pagination{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-top:1px solid var(--line);color:var(--muted);font-size:11px}
-.ticket-pagination>div{display:flex;gap:8px}
-.ticket-pagination .secondary{padding:7px 10px}
 .storage-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:24px 0 18px}
 .storage-metrics span{display:block;color:var(--muted);font-size:11px}
 .storage-metrics strong{display:block;font-size:24px;font-weight:600;margin-top:8px}
 .storage-panel progress{display:block;width:100%;height:12px;accent-color:var(--green)}
 .storage-panel>p{font-size:12px}
 .storage-warning{color:#925f1b;background:#fff5df;padding:12px;border-radius:6px}
-@media(max-width:700px){.storage-metrics{grid-template-columns:1fr;gap:12px}.storage-metrics strong{font-size:21px;margin-top:3px}.ticket-pagination{padding-inline:10px;flex-wrap:wrap}}
+@media(max-width:700px){.storage-metrics{grid-template-columns:1fr;gap:12px}.storage-metrics strong{font-size:21px;margin-top:3px}}
 
 /* Consistent status colors across dashboard cards, member counts and badges. */
 .status-new-ticket,.badge.new-ticket{--status-bg:#feeeee;--status-border:#efbcbc;--status-ink:#963b3b}
@@ -180,7 +176,6 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
 .ticket-section .ticket-title{color:#414c72}
 .ticket-section tbody tr:nth-child(even) td{background:#fcfbff}
 .ticket-section tbody tr:hover td{background:#f2eeff}
-.ticket-pagination{background:#fcfaff;color:#85809a}
 .ticket-filter-panel{background:#faf7ff}
 .description{color:#626b85}
 .facts b{color:#394568}
@@ -281,7 +276,6 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
 .overview-frozen .team-section h2{font-size:15px}
 .overview-frozen .section-card{padding-block:5px}
 .shell.overview-frozen .section-ticket-heading{padding-block:7px;margin-bottom:0}
-.overview-frozen .ticket-pagination{padding-block:6px}
 @media(min-width:701px) and (min-height:520px){
  .shell.overview-frozen{height:100dvh;min-height:0;overflow:hidden}
  .overview-frozen .main{display:flex;flex-direction:column;min-height:0}
@@ -331,9 +325,8 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
 .ticket-section table :is(th,td){padding-block:2.5px}
 .ticket-section table th .column-sort{padding-block:1px}
 
-.ticket-fit-region{overflow-anchor:none}
-.ticket-fit-region .ticket-row-outside-page{visibility:collapse}
 .section-tickets .ticket-id{white-space:nowrap}
 @media(max-width:700px), (max-height:519px){
- .section-tickets .ticket-fit-region{max-height:65dvh}
+ .section-tickets .ticket-fit-region{max-height:65dvh;overflow:auto}
+ .ticket-fit-region thead th{position:sticky;top:0;z-index:2;background:#f1edf9}
 }

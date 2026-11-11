@@ -33,11 +33,24 @@ export async function writeDesk(payload:Record<string,unknown>){
 }
 export async function signOut(){await supabase?.auth.signOut();}
 
-export async function readTickets(options:{search:string;status:string;assignee:string|null;section:string|null;offset:number;priority:string|null;createdFrom:string|null;createdTo:string|null;sort:string}){
+export async function readTickets(options:{search:string;status:string;assignee:string|null;section:string|null;priority:string|null;createdFrom:string|null;createdTo:string|null;sort:string},signal:AbortSignal){
  if(!supabase)throw Error('Supabase is not configured.');
- const {data,error}=await supabase.rpc('desk_ticket_list_filtered',{p_search:options.search,p_status:options.status==='All statuses'?null:options.status,p_assignee:options.assignee,p_section:options.section,p_offset:options.offset,p_limit:TICKET_FETCH_LIMIT,p_priority:options.priority,p_created_from:options.createdFrom,p_created_to:options.createdTo,p_sort:options.sort});
- if(error)throw Error(error.message);
- return data as {items:any[];total:number};
+ const items:any[]=[];
+ const seen=new Set<string>();
+ let offset=0;
+ while(!signal.aborted){
+  const {data,error}=await supabase.rpc('desk_ticket_list_filtered',{p_search:options.search,p_status:options.status==='All statuses'?null:options.status,p_assignee:options.assignee,p_section:options.section,p_offset:offset,p_limit:TICKET_FETCH_LIMIT,p_priority:options.priority,p_created_from:options.createdFrom,p_created_to:options.createdTo,p_sort:options.sort}).abortSignal(signal);
+  if(error)throw Error(error.message);
+  const batch=data as {items:any[];total:number};
+  for(const item of batch.items){
+   if(seen.has(item.id))continue;
+   seen.add(item.id);
+   items.push(item);
+  }
+  offset+=batch.items.length;
+  if(batch.items.length===0||offset>=batch.total)break;
+ }
+ return items;
 }
 export async function readTicket(id:string){
  if(!supabase)throw Error('Supabase is not configured.');

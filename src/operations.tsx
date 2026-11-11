@@ -4,7 +4,7 @@ export const overdueDays=(priority:string)=>({Low:30,Medium:10,High:3,Critical:1
 export const priorityLabel=(priority:string)=>priority==='Critical'?'Urgent':priority;
 export const automaticDueAt=(t:{created:string;priority:string})=>Date.parse(t.created)+overdueDays(t.priority)*24*60*60*1000;
 export const overdue=(t:{status:string;created:string;priority:string},now=Date.now())=>t.status!=='Closed'&&Number.isFinite(automaticDueAt(t))&&now>=automaticDueAt(t);
-export function Notifications({openTicket}:{openTicket:(id:string)=>void}){
+export function Notifications({openTicket,workApprovals=0}:{openTicket:(id:string)=>void;workApprovals?:number}){
  const container=useRef<HTMLDivElement>(null);
 
  const [data,setData]=useState<Awaited<ReturnType<typeof readNotifications>>>({unread:0,items:[]}),[error,setError]=useState(''),[open,setOpen]=useState(false);
@@ -16,7 +16,7 @@ export function Notifications({openTicket}:{openTicket:(id:string)=>void}){
   return ()=>document.removeEventListener('pointerdown',dismiss,true);
  },[open]);
  async function select(item:typeof data.items[number]){openTicket(item.ticket);setOpen(false);try{setData(await readNotifications(item.ticket,item.updated_at))}catch(e){setError(e instanceof Error?e.message:'Could not mark as read')}}
- return <div ref={container} className="notifications"><button className="secondary" aria-expanded={open} onClick={()=>setOpen(!open)}>Notifications {data.unread>0&&<b>({data.unread})</b>}</button>{open&&<section className="panel notification-list"><h3>Notifications</h3><small>Latest 30 ticket conversations · refreshes every 30 seconds</small>{error&&<p className="error" role="alert">{error}</p>}{!data.items.length&&!error&&<p>No notifications yet.</p>}{data.items.map(item=><button key={item.ticket} className={'notification-item'+(!item.read_at?' unread':'')} onClick={()=>void select(item)}>{item.message}<small>{new Date(item.updated_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} BDT</small></button>)}</section>}</div>;
+ return <div ref={container} className="notifications"><button className="secondary" aria-expanded={open} onClick={()=>setOpen(!open)}>Notifications {data.unread+workApprovals>0&&<b>({data.unread+workApprovals})</b>}</button>{open&&<section className="panel notification-list"><h3>Notifications</h3>{workApprovals>0&&<a className="notification-item unread" href="#/regular-work" onClick={()=>setOpen(false)}>{workApprovals} regular work approval requests</a>}<small>Latest 30 ticket conversations · refreshes every 30 seconds</small>{error&&<p className="error" role="alert">{error}</p>}{!data.items.length&&!error&&!workApprovals&&<p>No notifications yet.</p>}{data.items.map(item=><button key={item.ticket} className={'notification-item'+(!item.read_at?' unread':'')} onClick={()=>void select(item)}>{item.message}<small>{new Date(item.updated_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} BDT</small></button>)}</section>}</div>;
 }
 export function ManagerTransfer({team,onDone}:{team:any[];onDone:()=>Promise<void>}){
  const [target,setTarget]=useState(''),[confirmation,setConfirmation]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[open,setOpen]=useState(false);

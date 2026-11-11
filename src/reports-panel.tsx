@@ -32,6 +32,7 @@ export default function ReportsPanel(){
  }
  const summary=report?.summary;
  return <section className="reports-panel">
+ <a className="secondary work-report-link" href="#/regular-work/report">Regular work report</a>
  <form className="panel report-controls" onSubmit={generate}><label>Tickets created from — BDT<input type="date" value={from} max={to||undefined} disabled={busy||exporting} onChange={e=>setFrom(e.target.value)}/></label><label>Created to — BDT<input type="date" value={to} min={from||undefined} disabled={busy||exporting} onChange={e=>setTo(e.target.value)}/></label>
  <button className="primary" disabled={busy||exporting}><BarChart3 size={16}/>{busy?'Generating…':'Generate report'}</button><button className="secondary" type="button" disabled={!report||busy||exporting} onClick={()=>void download()}><Download size={16}/>{exporting?'Exporting…':'Export Excel'}</button></form>
  {error&&<p role="alert" className="error">{error}</p>}

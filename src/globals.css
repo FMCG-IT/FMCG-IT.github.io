@@ -335,3 +335,20 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
 @media(max-width:700px){
  .shell .sidebar{position:sticky;top:0;z-index:5}
 }
+
+
+.report-navigation{min-width:0;display:grid;gap:8px}
+.report-choices{display:grid;gap:6px}
+.report-navigation :is(.report-choices,.report-member-list)>button{
+ width:100%;height:36px;min-height:0;margin:0;padding:0 10px;justify-content:flex-start;text-align:left;
+}
+.report-picker.panel{padding:8px 0;background:transparent;border:0;box-shadow:none}
+.report-picker h2{padding-inline:2px}
+.manager-reports .reports-panel>h2{margin-bottom:5px}
+.manager-reports .report-controls{padding-block:7px}
+.manager-reports .report-summary{margin-block:5px}
+.manager-reports .report-officers>.section-head{padding-block:7px}
+@media(min-width:701px) and (min-height:520px){
+ .reports-frozen .report-navigation{align-self:start;max-height:100%;overflow:auto}
+ .reports-frozen .report-officers{flex:0 1 auto}
+}

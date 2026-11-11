@@ -330,3 +330,8 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
  .section-tickets .ticket-fit-region{max-height:65dvh;overflow:auto}
  .ticket-fit-region thead th{position:sticky;top:0;z-index:2;background:#f1edf9}
 }
+
+.section-heading .text-button{flex-shrink:0}
+@media(max-width:700px){
+ .shell .sidebar{position:sticky;top:0;z-index:5}
+}

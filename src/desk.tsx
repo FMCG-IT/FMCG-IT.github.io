@@ -129,7 +129,7 @@ return <div className="shell"><aside className="sidebar"><a className="brand bra
  const total=Number(stats?.active??officers.reduce((sum:number,o:any)=>sum+activeCount(o.id),0));
  const hasOverdue=!!stats?.earliest_due&&Date.parse(stats.earliest_due)<=Date.now();
  const needsAttention=total>50||hasOverdue;
- return <a key={group} className={'officer section-card'+(needsAttention?' section-alert':'')} title={needsAttention?[(total>50?'More than 50 active tickets':''),(hasOverdue?'Overdue ticket present':'')].filter(Boolean).join(' · '):undefined} href={(view==='IT team'?'#/team/':'#/sections/')+sectionSlug(group)}>
+ return <a key={group} className={'officer section-card'+(needsAttention?' section-alert':'')+(hasOverdue?' section-overdue':'')} title={needsAttention?[(total>50?'More than 50 active tickets':''),(hasOverdue?'Overdue ticket present':'')].filter(Boolean).join(' · '):undefined} href={(view==='IT team'?'#/team/':'#/sections/')+sectionSlug(group)}>
  <ArrowUpRight className="officer-arrow" size={14} aria-hidden="true"/>
  <h3>{group}</h3><p>{view==='IT team'?officers.length+' members':total+' active '+(total===1?'ticket':'tickets')}</p>
  </a>;

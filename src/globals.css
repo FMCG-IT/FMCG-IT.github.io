@@ -242,3 +242,9 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
 .ticket-sort{width:auto;max-width:190px;margin:0;padding:7px 9px;font-size:11px;min-height:32px}.ticket-table-controls{flex-wrap:wrap}
 .officer.section-card.section-alert{background:#ffeded!important;border-color:#ed9ba5!important;border-left:4px solid #d62b40!important;box-shadow:0 2px 9px #d62b4010}.officer.section-card.section-alert h3,.officer.section-card.section-alert p,.officer.section-card.section-alert .officer-arrow{color:#b51f32!important}.officer.section-card.section-alert h3{font-weight:750}
 .column-sort{display:inline-flex;align-items:center;gap:7px;background:transparent;border:0;padding:4px 0;color:inherit;font:inherit;letter-spacing:inherit;text-align:left;white-space:nowrap}.column-sort span{font-size:13px;color:#9b8db8}.column-sort.active{color:#6735ae;font-weight:700}.column-sort.active span{color:#6735ae}.column-sort:hover{color:#6735ae}.column-sort:focus-visible{outline:2px solid #9d76d4;outline-offset:3px;border-radius:3px}
+.ticket-row.ticket-overdue,.ticket-row.ticket-overdue>td,.officer.section-card.section-overdue{background:#b91c32!important;color:#fff!important;border-color:#a1182b!important}
+.ticket-row.ticket-overdue:hover>td,.officer.section-card.section-overdue:hover{background:#9f172b!important}
+.ticket-row.ticket-overdue :is(button,small,span,time,.overdue-label),.officer.section-card.section-overdue :is(h3,p,.officer-arrow){color:#fff!important}
+.ticket-row.ticket-overdue :is(.badge,.priority){background:#ffffff19!important;border-color:#ffffff60!important}
+.ticket-row.ticket-overdue .dot{background:#fff!important}
+.ticket-row.ticket-overdue button:focus-visible,.officer.section-card.section-overdue:focus-visible{outline:2px solid #fff;outline-offset:-2px}

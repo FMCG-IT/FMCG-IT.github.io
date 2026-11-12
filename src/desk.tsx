@@ -90,6 +90,7 @@ const ticketDetails=selected&&t?<><button className="text-button" onClick={()=>s
     <td>{ticket.assignee_name??officerNames.get(ticket.assignee)}</td>
     <td><span className={'priority '+ticket.priority.toLowerCase()}><i className="dot"/>{priorityLabel(ticket.priority)}</span></td>
     <td><span className={'badge '+ticket.status.toLowerCase().replaceAll(' ','-')}>{ticket.status}</span></td>
+    <td><time dateTime={ticket.created}>{dhakaTime.format(new Date(ticket.created))}</time></td>
     <td><time dateTime={updatedAt}>{dhakaTime.format(new Date(updatedAt))}</time></td>
     <td className="section-ticket-comment">{comment?comment.body:<span className="muted">No comment yet</span>}</td>
    </tr>})}</tbody>

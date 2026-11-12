@@ -5,6 +5,7 @@ export const sortableColumns=[
  {key:'assignee',label:'ASSIGNED TO',first:'asc'},
  {key:'priority',label:'PRIORITY',first:'desc'},
  {key:'status',label:'STATUS',first:'asc'},
+ {key:'created',label:'CREATED DATE (BDT)',first:'desc'},
  {key:'updated',label:'LAST UPDATE TIME (BDT)',first:'desc'},
  {key:'comment',label:'LAST UPDATE COMMENT',first:'asc'},
 ] as const;

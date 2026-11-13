@@ -40,7 +40,8 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
   window.addEventListener('desk-items-changed',refresh);
   return ()=>{active=false;window.removeEventListener('desk-items-changed',refresh);};
  },[]);
- const rows=projects?.filter(p=>filter==='All projects'||p.status===filter);
+ const matchesFilter=(project:Project,value:typeof filters[number])=>value==='All projects'||project.status===value;
+ const rows=projects?.filter(project=>matchesFilter(project,filter));
  useEffect(()=>{
   if(!projects?.some(p=>p.approval_status==='Pending'))return;
   let active=true;
@@ -126,7 +127,7 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
     {canEdit(selected)&&project?.id===selected.id&&<section className="panel"><h3>Manage project</h3>{projectForm}<DeleteItem key={selected.id} kind="project" id={selected.id} manager={me.manager===1} onDelete={()=>{setProjects(previous=>previous?.filter(p=>p.id!==selected.id));setEditing(undefined);setSelectedId(undefined)}}/>{error&&<p className="error" role="alert">{error}</p>}</section>}
    </div>
   </div>:<>
-  <div className="project-filters" aria-label="Filter projects">{filters.map((value,index)=><button key={value} className={filter===value?'primary':'secondary'} aria-pressed={filter===value} onClick={()=>setFilter(value)}>{labels[index]}</button>)}</div>
+  <div className="project-filters" aria-label="Filter projects">{filters.map((value,index)=><button key={value} className={filter===value?'primary':'secondary'} aria-pressed={filter===value} onClick={()=>setFilter(value)}>{labels[index]} <span className="project-filter-count">{projects?.filter(project=>matchesFilter(project,value)).length??'—'}</span></button>)}</div>
   {error&&<p className="error" role="alert">{error}</p>}
   <section className="ticket-section project-table"><div className="table-scroll ticket-fit-region" tabIndex={0} role="region" aria-label="Projects"><table>
    <thead><tr>{['Project ID','Subject','Created by','Created date (BDT)','Assigned to','Deadline (BDT)','Update',...(filter==='All projects'?['Status']:[])].map(label=><th key={label} scope="col">{label}</th>)}</tr></thead>

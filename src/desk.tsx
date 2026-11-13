@@ -1,7 +1,7 @@
 import {showSuccess} from './success-notice';
 import DeleteItem from './delete-item';
 import Projects from './projects';
-import {readProjectCount} from './backend';
+import {readProjectCount,readProjects} from './backend';
 import RegularWork from './regular-work';
 import {readWorkSummary} from './backend';
 import {sortableColumns,nextTicketSort} from './ticket-sorting';
@@ -43,6 +43,20 @@ useEffect(()=>{
  window.addEventListener('desk-items-changed',refresh);
  return ()=>{active=false;clearInterval(timer);window.removeEventListener('desk-items-changed',refresh);};
 },[view]);
+const [memberProjectCounts,setMemberProjectCounts]=useState<Map<string,number>>();
+useEffect(()=>{
+ if(!section)return;
+ let active=true;
+ const refresh=()=>void readProjects().then(projects=>{
+  if(!active)return;
+  const counts=new Map<string,number>();
+  for(const project of projects)counts.set(project.assignee,(counts.get(project.assignee)??0)+1);
+  setMemberProjectCounts(counts);
+ }).catch(()=>{});
+ refresh();
+ const timer=setInterval(refresh,30000);
+ return ()=>{active=false;clearInterval(timer);};
+},[section]);
 const listAssignee=view==='My portal'?data?.me.id:filter||null;
 const listSection=section??null;
 async function load(){setData(await readDesk());setRevision(value=>value+1)}
@@ -124,7 +138,7 @@ const ticketDetails=selected&&t?<><button className="text-button" onClick={()=>s
 const modalView=modal&&<div className="overlay" onClick={()=>setModal('')}><section className="dialog" role="dialog" aria-modal="true" aria-label={modal==='ticket_edit'?'Edit ticket':modal==='create'?'Create ticket':modal==='officer_edit'?'Edit officer':modal==='officer_delete'?'Delete officer':'Add officer'} onClick={e=>e.stopPropagation()}><div className="section-head"><h2>{modal==='ticket_edit'?'Edit ticket details':modal==='create'?'Create a ticket':modal==='officer_edit'?'Edit IT officer':modal==='officer_delete'?'Delete IT officer':'Add IT officer'}</h2><button className="icon-button" aria-label="Close" onClick={()=>setModal('')}><X/></button></div><p className="muted">{modal==='ticket_edit'?'Update ticket details. Overdue from creation: Low 30 days, Medium 10 days, High 3 days, Urgent 1 day.':modal==='officer_delete'?'Remove team access and transfer assigned tickets. Ticket history is kept.':modal==='create'?'Log the issue, assign an officer, and keep everyone updated.':modal==='officer'?'Set the email and password the officer will use to sign in.':'Use the email they will sign in with.'}</p><form onSubmit={e=>submit(e,modal)}>{modal==='officer_delete'?<><p>Remove <b>{deleting?.name}</b> from the IT team?</p><label>Transfer tickets to<select name="replacement" defaultValue={data.me.id}>{team.filter((o:any)=>o.id!==deleting?.id).map((o:any)=><option key={o.id} value={o.id}>{o.name}</option>)}</select></label></>:modal==='officer'||modal==='officer_edit'?<><label>Full name<input required name="name" defaultValue={editing&&modal==='officer_edit'?editing.name:''} placeholder="Officer’s full name"/></label><label>Account email<input required type="email" name="email" readOnly={modal==='officer_edit'&&editing?.id===data.me.id} defaultValue={editing&&modal==='officer_edit'?editing.email:''} placeholder="name@company.com"/></label>{modal==='officer'&&<label>Login password<input name="password" type="password" required minLength={8} maxLength={72} autoComplete="new-password" placeholder="Set the officer’s password"/></label>}<label>Designation<select name="designation" defaultValue={modal==='officer_edit'?(editing.designation??(editing.manager===1?'Manager':'Officer')):'Officer'}>{designations.map(designation=><option key={designation}>{designation}</option>)}</select></label><label>IT section<select name="specialty" defaultValue={modal==='officer_edit'?sectionFor(editing.specialty):section??'Software/System'}>{sections.map(section=><option key={section}>{section}</option>)}</select></label><OfficeFields key={modal+'-'+(editing?.id??'new')} selected={modal==='officer_edit'?editing?.offices??[]:[]}/></>:<><label>Issue title<input name="title" required maxLength={200} defaultValue={modal==='ticket_edit'?t?.title:''} placeholder="e.g. Accounts printer is not responding"/></label><div className="form-row"><label>Affected employee<input name="employee" required maxLength={200} defaultValue={modal==='ticket_edit'?t?.employee:''} placeholder="Employee name"/></label><label>Department / location<input name="department" maxLength={200} defaultValue={modal==='ticket_edit'?t?.department:''} placeholder="Accounts · Floor 2"/></label></div><div className="form-row"><TeamAssignment key={modal+'-'+(t?.id??'new')} officers={team} initialOfficer={modal==='ticket_edit'?t?.assignee:filter||data.me.id} initialTeam={modal==='create'?section:undefined} initialOffice={modal==='ticket_edit'?t?.office??'':''}/><label>Priority<PrioritySelect key={modal+'-'+(t?.id??'new')} initial={modal==='ticket_edit'?t?.priority:'Medium'}/></label></div><label>Description<textarea name="description" rows={3} maxLength={10000} defaultValue={modal==='ticket_edit'?t?.description:''} placeholder="Describe the issue and any troubleshooting so far…"/></label></>}{error&&<p className="error">{error}</p>}<button className="primary" disabled={busy}>{busy?'Saving…':modal==='ticket_edit'?'Save ticket':modal==='create'?'Create ticket':modal==='officer_edit'?'Save changes':modal==='officer_delete'?'Delete officer':'Add officer'}<ArrowUpRight size={17}/></button></form></section></div>;
 const memberCards=<div className="officer-grid">{sectionOfficers.map((o:any)=><article key={o.id} className="member-card">
  <a className="officer" href={'#/officers/'+encodeURIComponent(o.id)}><ArrowUpRight className="officer-arrow" size={14}/><h3>{o.name}</h3><p>{o.designation??(o.manager===1?'Manager':'Officer')}</p>
- <p className="member-offices">{o.offices?.length?o.offices.join(' · '):'No offices assigned'}</p><div className="officer-bottom member-statuses">{statuses.map(status=><span className={'member-status status-'+status.toLowerCase().replaceAll(' ','-')} key={status}>{status}: <b>{memberCount(o.id,status)}</b></span>)}</div></a>
+ <p className="member-offices">{o.offices?.length?o.offices.join(' · '):'No offices assigned'}</p><div className="officer-bottom member-statuses">{statuses.map(status=><span className={'member-status status-'+status.toLowerCase().replaceAll(' ','-')} key={status}>{status}: <b>{memberCount(o.id,status)}</b></span>)}<span className="member-status member-project-count">Projects: <b>{memberProjectCounts?(memberProjectCounts.get(o.id)??0):'—'}</b></span></div></a>
  {teamPage&&data.me.manager===1&&<div className="member-actions"><button className="text-button" onClick={()=>{setEditing(o);setError('');setModal('officer_edit')}}><Pencil size={13}/> Edit</button>{o.id!==data.me.id&&<button className="text-button danger" onClick={()=>{setDeleting(o);setError('');setModal('officer_delete')}}><Trash2 size={13}/> Delete</button>}</div>}
  </article>)}</div>;
 const sectionContent=section?<><div className="heading section-heading">

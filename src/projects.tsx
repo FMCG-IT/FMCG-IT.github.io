@@ -18,6 +18,13 @@ export type Project={
  id:number; subject:string; created_by:string; creator_name:string; created_at:string;
  assignee:string; assignee_name:string; deadline:string; latest_update:string; status:typeof phases[number];
 };
+const projectColumns=[
+ ['id','Project ID'],['subject','Subject'],['creator_name','Created by'],['created_at','Created date (BDT)'],
+ ['assignee_name','Assigned to'],['deadline','Deadline (BDT)'],['latest_update','Update'],['status','Status'],
+] as const;
+type ProjectColumn=typeof projectColumns[number][0];
+const collator=new Intl.Collator(undefined,{numeric:true,sensitivity:'base'});
+const displayStatus=(project:Project)=>project.approval_status==='Pending'?'Pending approval':project.status;
 type Officer={id:string;name:string;specialty:string};
 const projectLabel=(id:number)=>'PRJ-'+String(id).padStart(6,'0');
 const createdDate=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Dhaka',dateStyle:'medium',timeStyle:'short'});
@@ -41,7 +48,15 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
   return ()=>{active=false;window.removeEventListener('desk-items-changed',refresh);};
  },[]);
  const matchesFilter=(project:Project,value:typeof filters[number])=>value==='All projects'||project.status===value;
- const rows=projects?.filter(project=>matchesFilter(project,filter));
+ const [sort,setSort]=useState<{key:ProjectColumn;descending:boolean}>({key:'id',descending:true});
+ const columns=filter==='All projects'?projectColumns:projectColumns.slice(0,-1);
+ const key=filter!=='All projects'&&sort.key==='status'?'id':sort.key;
+ const descending=key===sort.key?sort.descending:true;
+ const rows=projects?.filter(project=>matchesFilter(project,filter)).sort((a,b)=>{
+  const order=key==='id'?a.id-b.id:key==='created_at'?Date.parse(a.created_at)-Date.parse(b.created_at):
+   key==='status'?collator.compare(displayStatus(a),displayStatus(b)):collator.compare(a[key]??'',b[key]??'');
+  return (descending?-order:order)||b.id-a.id;
+ });
  useEffect(()=>{
   if(!projects?.some(p=>p.approval_status==='Pending'))return;
   let active=true;
@@ -130,7 +145,11 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
   <div className="project-filters" aria-label="Filter projects">{filters.map((value,index)=><button key={value} className={filter===value?'primary':'secondary'} aria-pressed={filter===value} onClick={()=>setFilter(value)}>{labels[index]} <span className="project-filter-count">{projects?.filter(project=>matchesFilter(project,value)).length??'—'}</span></button>)}</div>
   {error&&<p className="error" role="alert">{error}</p>}
   <section className="ticket-section project-table"><div className="table-scroll ticket-fit-region" tabIndex={0} role="region" aria-label="Projects"><table>
-   <thead><tr>{['Project ID','Subject','Created by','Created date (BDT)','Assigned to','Deadline (BDT)','Update',...(filter==='All projects'?['Status']:[])].map(label=><th key={label} scope="col">{label}</th>)}</tr></thead>
+   <thead><tr>{columns.map(([column,label])=><th key={column} scope="col" aria-sort={key===column?(descending?'descending':'ascending'):undefined}>
+    <button type="button" className={'column-sort'+(key===column?' active':'')} onClick={()=>setSort({key:column,descending:key===column?!descending:column==='id'||column==='created_at'})}>
+     {label}<span aria-hidden="true">{key===column?(descending?'↓':'↑'):'↕'}</span>
+    </button>
+   </th>)}</tr></thead>
    <tbody>{rows?.length?rows.map(p=><tr key={p.id} className="ticket-row" onClick={()=>showProject(p)}>
     <td className="ticket-id">{projectLabel(p.id)}</td>
     <td><button className="ticket-title" onClick={e=>{e.stopPropagation();showProject(p)}}>{p.subject}</button>{filter!=='All projects'&&p.approval_status==='Pending'&&<small>Pending approval</small>}</td>

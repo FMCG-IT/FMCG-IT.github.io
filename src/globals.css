@@ -371,3 +371,8 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
  .project-table>.table-scroll{flex:1;min-height:0;overflow:auto}
  .project-table thead th{position:sticky;top:0;z-index:2;background:#f1edf9}
 }
+
+.shell .stat.regular-work-stat{background:#efe7ff;border-color:#cbb4f5;color:#624193}
+.shell .stat.project-stat{background:#e3f3ff;border-color:#a4cfea;color:#175781}
+.project-detail{overflow:auto;min-height:0}
+.project-detail .description{white-space:pre-wrap;overflow-wrap:anywhere}

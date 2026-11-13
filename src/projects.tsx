@@ -7,7 +7,7 @@ import {teamLabel} from './team-assignment';
 import PrioritySelect from './priority-select';
 import {priorityLabel} from './operations';
 import {ArrowLeft} from 'lucide-react';
-import {readProjects,saveProject} from './backend';
+import {readProjects,saveProject,readProjectHistory,type ProjectUpdate} from './backend';
 
 const phases=['New project','Ongoing project','Completed'] as const;
 const filters=['New project','Ongoing project','Completed','All projects'] as const;
@@ -50,6 +50,16 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
  },[projects]);
  const project=editing==='new'?undefined:editing;
  const selected=projects?.find(p=>p.id===selectedId);
+ const [history,setHistory]=useState<{id:number;rows?:ProjectUpdate[];error?:string}>();
+ const [historyRevision,setHistoryRevision]=useState(0);
+ const historyProject=selected?.approval_status==='Pending'?undefined:selected?.id;
+ useEffect(()=>{
+  if(historyProject===undefined)return;
+  let active=true;
+  void readProjectHistory(historyProject).then(rows=>{if(active)setHistory({id:historyProject,rows});})
+   .catch((error:Error)=>{if(active)setHistory({id:historyProject,error:error.message});});
+  return ()=>{active=false;};
+ },[historyProject,historyRevision]);
  const canEdit=(p:Project)=>p.approval_status!=='Pending'&&(me.manager===1||me.id===p.created_by||me.id===p.assignee);
  const open=(value:Project|'new')=>{
   const officer=value==='new'?'':value.assignee;
@@ -70,6 +80,7 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
     try{await saveProject({...fields,id:project?.id});}
     catch(err){setFormError(err instanceof Error?err.message:'Could not save project.');setBusy(false);return;}
     setUpdateDraft('');
+    if(project)setHistoryRevision(value=>value+1);
     showSuccess(project?'Project updated successfully':'Project submitted for Manager approval');
     if(!project)setEditing(undefined);
     try{const updated=await readProjects();setProjects(updated);const saved=updated.find(row=>row.id===project?.id);if(saved)setEditing(saved);}
@@ -104,7 +115,11 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
       <span>Created by<b>{selected.creator_name}</b></span><span>Created date (BDT)<b>{createdDate.format(new Date(selected.created_at))}</b></span>
       <span>Deadline (BDT)<b>{selected.deadline}</b></span>
      </div>
-     <h3>Latest update</h3><p className="description">{selected.latest_update||'No updates yet.'}</p>
+     <h3>Activity &amp; updates</h3>
+     {selected.approval_status==='Pending'?<p className="muted">No updates yet.</p>:history?.id!==selected.id?<p role="status">Loading updates…</p>:history.error?<p className="error" role="alert">{history.error}</p>:history.rows?.length?history.rows.map(update=><article className="event" key={update.id}>
+      <small>{update.author??'Saved update'}{update.created_at?' · '+createdDate.format(new Date(update.created_at))+' BDT':''}</small>
+      <p>{update.body}</p>
+     </article>):<p className="muted">No updates yet.</p>}
     </section>
     {selected.approval_status==='Pending'&&<section className="panel"><h3>Pending approval</h3><p>Update and status changes are available after Manager approval.</p></section>}
     {canEdit(selected)&&project?.id!==selected.id&&<section className="panel"><h3>Manage project</h3><button className="secondary" onClick={()=>open(selected)}>Edit project and status</button></section>}

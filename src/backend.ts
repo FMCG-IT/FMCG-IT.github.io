@@ -110,3 +110,6 @@ export const readProjectApprovals=(id?:number,approve?:boolean)=>deskRpc<Project
 export const readProjectNotifications=(id?:number,seenAt?:string)=>deskRpc<{
  unread:number;items:{project:number;message:string;updated_at:string;read_at:string|null}[];
 }>('desk_project_notifications',{p_project:id??null,p_seen_at:seenAt??null});
+
+export type ProjectUpdate={id:number;body:string;author:string|null;created_at:string|null};
+export const readProjectHistory=(id:number)=>deskRpc<ProjectUpdate[]>('desk_project_history',{p_id:id});

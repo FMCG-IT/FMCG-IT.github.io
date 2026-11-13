@@ -1,5 +1,5 @@
 import {showSuccess} from './success-notice';
-import {readProjectNotifications} from './backend';
+import {readProjectNotifications,readProjectReminders,type ProjectReminder} from './backend';
 import {useEffect,useState,useRef} from 'react';
 import {readNotifications,writeDesk,readDeleteRequests,writeDeleteAction,readDeleteResults,type DeleteResult,type DeleteRequest,readProjectApprovals,type ProjectApproval} from './backend';
 export const overdueDays=(priority:string)=>({Low:30,Medium:10,High:3,Critical:1,Urgent:1}[priority]??10);
@@ -10,6 +10,7 @@ export function Notifications({openTicket,workApprovals=0,onItemsChanged}:{openT
  const container=useRef<HTMLDivElement>(null);
 
  const [data,setData]=useState<Awaited<ReturnType<typeof readNotifications>>>({unread:0,items:[]}),[error,setError]=useState(''),[open,setOpen]=useState(false);
+ const [reminders,setReminders]=useState<ProjectReminder[]>([]);
  const [projectInbox,setProjectInbox]=useState<Awaited<ReturnType<typeof readProjectNotifications>>>({unread:0,items:[]});
  const [deletions,setDeletions]=useState<DeleteRequest[]>([]);
  const [results,setResults]=useState<DeleteResult[]>([]);
@@ -18,6 +19,7 @@ export function Notifications({openTicket,workApprovals=0,onItemsChanged}:{openT
  useEffect(()=>{
   let active=true;
   const refresh=()=>{
+   void readProjectReminders().then(rows=>{if(active)setReminders(rows)}).catch(()=>{});
    void readProjectNotifications().then(rows=>{if(active)setProjectInbox(rows)}).catch(()=>{});
    void readDeleteRequests().then(rows=>{if(active)setDeletions(rows)}).catch(()=>{});
    void readProjectApprovals().then(rows=>{if(active)setProjectRequests(rows)}).catch(()=>{});
@@ -43,7 +45,7 @@ export function Notifications({openTicket,workApprovals=0,onItemsChanged}:{openT
   catch(e){setError(e instanceof Error?e.message:'Could not review project.');}
   finally{setReviewing(false);}
  }
- const total=projectInbox.unread+data.unread+workApprovals+deletions.length+results.length+projectRequests.length;
+ const total=reminders.length+projectInbox.unread+data.unread+workApprovals+deletions.length+results.length+projectRequests.length;
  useEffect(()=>{let active=true;const refresh=()=>{if(document.visibilityState==='hidden')return;void readNotifications().then(r=>{if(active){setData(r);setError('')}}).catch((e:Error)=>{if(active)setError(e.message)});};refresh();const timer=setInterval(refresh,30000);document.addEventListener('visibilitychange',refresh);return()=>{active=false;clearInterval(timer);document.removeEventListener('visibilitychange',refresh)}},[]);
  useEffect(()=>{
   if(!open)return;
@@ -69,7 +71,10 @@ export function Notifications({openTicket,workApprovals=0,onItemsChanged}:{openT
  setOpen(false);
  if(location.hash==='#/regular-work/approvals')document.getElementById('work-approvals')?.scrollIntoView({block:'start'});
  else location.hash='/regular-work/approvals';
- }}>{workApprovals} regular work approval {workApprovals===1?'request':'requests'}</button>}<small>Recent ticket and project activity · refreshes every 30 seconds</small>{error&&<p className="error" role="alert">{error}</p>}{!data.items.length&&!projectInbox.items.length&&!error&&!workApprovals&&!deletions.length&&!results.length&&!projectRequests.length&&<p>No notifications yet.</p>}{projectInbox.items.map(item=><button key={item.project} type="button" className={'notification-item'+(!item.read_at?' unread':'')} onClick={async()=>{
+ }}>{workApprovals} regular work approval {workApprovals===1?'request':'requests'}</button>}<small>Recent ticket and project activity · refreshes every 30 seconds</small>{error&&<p className="error" role="alert">{error}</p>}{!data.items.length&&!projectInbox.items.length&&!reminders.length&&!error&&!workApprovals&&!deletions.length&&!results.length&&!projectRequests.length&&<p>No notifications yet.</p>}{reminders.map(item=><button type="button" key={item.project+'-'+item.kind+'-'+item.day} className={'notification-item unread'+(item.kind==='progress'?'':' project-reminder-urgent')} onClick={async()=>{
+  try{setReminders(await readProjectReminders(item));setOpen(false);location.hash='/projects/'+item.project;}
+  catch(e){setError(e instanceof Error?e.message:'Could not open reminder');}
+ }}>{item.message}<small>Deadline {item.deadline} (BDT)</small></button>)}{projectInbox.items.map(item=><button key={item.project} type="button" className={'notification-item'+(!item.read_at?' unread':'')} onClick={async()=>{
   setOpen(false);
   try{setProjectInbox(await readProjectNotifications(item.project,item.updated_at));}
   catch(e){setError(e instanceof Error?e.message:'Could not mark as read');}

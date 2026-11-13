@@ -113,3 +113,8 @@ export const readProjectNotifications=(id?:number,seenAt?:string)=>deskRpc<{
 
 export type ProjectUpdate={id:number;body:string;author:string|null;created_at:string|null};
 export const readProjectHistory=(id:number)=>deskRpc<ProjectUpdate[]>('desk_project_history',{p_id:id});
+
+export type ProjectReminder={project:number;kind:'progress'|'due_member'|'due_manager';day:string;message:string;deadline:string};
+export const readProjectReminders=(item?:ProjectReminder)=>deskRpc<ProjectReminder[]>('desk_project_reminders',{
+ p_project:item?.project??null,p_kind:item?.kind??null,p_day:item?.day??null,
+});

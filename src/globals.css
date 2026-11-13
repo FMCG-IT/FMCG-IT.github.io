@@ -392,3 +392,6 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
 .work-row.work-row-overdue :is(small,p,.work-status,button){color:#fff}
 .work-row.work-row-overdue :is(.work-status,button){background:#ffffff19;border-color:#ffffff60}
 .report-officers .ticket-row.ticket-overdue td{cursor:default}
+
+.notification-item.unread.project-reminder-urgent{background:#fff0ed;color:#9e2635;border-left:3px solid #bc3042}
+.report-officers .ticket-overdue a{color:inherit}

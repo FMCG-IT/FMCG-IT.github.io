@@ -376,3 +376,6 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
 .shell .stat.project-stat{background:#e3f3ff;border-color:#a4cfea;color:#175781}
 .project-detail{overflow:auto;min-height:0}
 .project-detail .description{white-space:pre-wrap;overflow-wrap:anywhere}
+
+.shell .stat.project-stat{background:#bfe5ff;border-color:#529dcc;color:#124565}
+.shell .stat.project-stat div span{font-weight:800}

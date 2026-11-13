@@ -45,10 +45,12 @@ function RegularWorkReport({officer,team}:{officer?:Officer;team:Officer[]}){
  <section className="ticket-section report-officers"><div className="section-head"><h2>Officer performance</h2></div><div className="table-scroll" tabIndex={0} role="region" aria-label="Report table"><table><thead><tr><th>OFFICER</th><th>SCHEDULED</th><th>COMPLETED</th><th>PENDING</th><th>NOT COMPLETED</th><th>COMPLETION RATE</th><th>APPROVED REASONS</th><th>AWAITING APPROVAL</th></tr></thead><tbody>{team.filter(o=>!o.archived||byOfficer.has(o.id)).map(o=>{const s=count(byOfficer.get(o.id)??[],data.today);return <tr key={o.id}><td>{o.name}{o.archived&&<small>Archived</small>}</td><td>{s.total}</td><td>{s.done}</td><td>{s.pending}</td><td>{s.missed}</td><td>{rate(s)}</td><td>{s.approved}</td><td>{s.waiting}</td></tr>})}</tbody></table></div></section>}</>}
  </section>;
 }
-function MemberProjectReport({officer}:{officer:Officer}){
+function MemberProjectReport({officer}:{officer?:Officer}){
+ const [dates,setDates]=useState({from:'',to:''});
+ const [range,setRange]=useState(dates);
+ const dateFormat=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Dhaka',year:'numeric',month:'2-digit',day:'2-digit'});
  const [projects,setProjects]=useState<Project[]>();
  const [error,setError]=useState('');
- const [sort,setSort]=useState<{column:'subject'|'deadline'|'status'|'latest_update';desc:boolean}>({column:'deadline',desc:false});
  useEffect(()=>{
   let active=true;
   const refresh=()=>void readProjects().then(rows=>{if(active){setProjects(rows);setError('');}}).catch((e:Error)=>{if(active)setError(e.message);});
@@ -56,28 +58,33 @@ function MemberProjectReport({officer}:{officer:Officer}){
   return ()=>{active=false;clearInterval(timer);};
  },[]);
  const status=(p:Project)=>p.approval_status==='Pending'?'Pending approval':p.status;
- const rows=projects?.filter(p=>p.assignee===officer.id).sort((a,b)=>{
-  const value=(p:Project)=>sort.column==='status'?status(p):p[sort.column];
-  return value(a).localeCompare(value(b),undefined,{numeric:true})*(sort.desc?-1:1)||b.id-a.id;
+ const rows=projects?.filter(p=>{
+  const day=dateFormat.format(new Date(p.created_at));
+  return (!officer||p.assignee===officer.id)&&(!range.from||day>=range.from)&&(!range.to||day<=range.to);
  });
- return <section className="reports-panel"><h2>{officer.name} · Project report</h2>
+ const metrics=[
+  ['Total projects',rows?.length??0],
+  ...['Pending approval','New project','Ongoing project','Completed'].map(label=>[label,rows?.filter(p=>status(p)===label).length??0]),
+  ['Overdue',rows?.filter(p=>p.approval_status!=='Pending'&&p.status!=='Completed'&&p.deadline<dateBDT(0)).length??0],
+ ];
+ return <section className="reports-panel"><h2>{officer?officer.name+' · Project report':'Project summary'}</h2>
+  <form className="panel report-controls" onSubmit={e=>{e.preventDefault();setRange({...dates});}}>
+   <label>Projects created from — BDT<input type="date" max={dates.to||undefined} value={dates.from} onChange={e=>setDates({...dates,from:e.target.value})}/></label>
+   <label>Created to — BDT<input type="date" min={dates.from||undefined} value={dates.to} onChange={e=>setDates({...dates,to:e.target.value})}/></label>
+   <button className="primary" disabled={!projects}>Generate report</button>
+  </form>
+  {projects&&<><p className="muted report-scope">{range.from||range.to?`Projects created: ${range.from||'Any start date'} → ${range.to||'Any end date'} · BDT`:'All creation dates'}</p><div className="report-summary">{metrics.map(([label,value])=><article key={label} className="panel"><span>{label}</span><strong>{value}</strong></article>)}</div></>}
   {error&&<p role="alert" className="error">{error}</p>}
-  <section className="ticket-section report-officers"><div className="table-scroll" tabIndex={0} role="region" aria-label="Assigned projects"><table>
-   <thead><tr>{([['subject','Project'],['deadline','Deadline (BDT)'],['status','Status'],['latest_update','Latest update']] as const).map(([column,label])=><th key={column} scope="col" aria-sort={sort.column===column?(sort.desc?'descending':'ascending'):undefined}><button type="button" className="column-sort" onClick={()=>setSort({column,desc:sort.column===column&&!sort.desc})}>{label}<span aria-hidden="true">{sort.column===column?(sort.desc?'↓':'↑'):'↕'}</span></button></th>)}</tr></thead>
-   <tbody>{rows?.length?rows.map(p=>{
-    const overdue=p.approval_status!=='Pending'&&p.status!=='Completed'&&p.deadline<dateBDT(0);
-    return <tr key={p.id} className={overdue?'ticket-row ticket-overdue':undefined}><td><a href={'#/projects/'+p.id}>{p.subject}</a></td><td>{p.deadline}</td><td>{status(p)}{overdue&&<small>Overdue</small>}</td><td className="project-update">{p.latest_update||'—'}</td></tr>;
-   }):<tr><td colSpan={4}>{error?'Could not load assigned projects.':projects?'No assigned projects.':'Loading projects…'}</td></tr>}</tbody>
-  </table></div></section>
+
  </section>;
 }
 export default function ManagerReports({team}:{team:Officer[]}){
  const [kind,setKind]=useState<'ticket'|'work'|'project'>(),[selected,setSelected]=useState<string>();
  const activeMembers=team.filter(o=>!o.archived);
  const officer=activeMembers.find(o=>o.id===selected);
- const showReport=(kind!=='project'&&selected==='summary')||!!officer;
+ const showReport=selected==='summary'||!!officer;
  const switchKind=(value:'ticket'|'work'|'project')=>{if(value!==kind){setKind(value);setSelected(undefined)}};
  return <div className="manager-reports"><div className="report-layout"><div className="report-navigation"><div className="report-choices" aria-label="Report type"><button className={kind==='ticket'?'primary':'secondary'} aria-pressed={kind==='ticket'} onClick={()=>switchKind('ticket')}>Ticket report</button><button className={kind==='work'?'primary':'secondary'} aria-pressed={kind==='work'} onClick={()=>switchKind('work')}>Regular work report</button><button className={kind==='project'?'primary':'secondary'} aria-pressed={kind==='project'} onClick={()=>switchKind('project')}>Project report</button></div>
- {kind&&<aside className="panel report-picker" aria-label="Report selection"><h2>Members</h2><div className="report-member-list">{kind!=='project'&&<button className={selected==='summary'?'primary':'secondary'} aria-pressed={selected==='summary'} onClick={()=>setSelected('summary')}>Summary report</button>}{activeMembers.map(o=><button title={o.email} key={o.id} className={selected===o.id?'primary':'secondary'} aria-pressed={selected===o.id} onClick={()=>setSelected(o.id)}>{o.name}</button>)}</div></aside>}</div>
- {kind&&<div className="report-result">{showReport?(kind==='ticket'?<ReportsPanel officerId={officer?.id} officerName={officer?.name}/>:kind==='project'&&officer?<MemberProjectReport key={officer.id} officer={officer}/>:<RegularWorkReport officer={officer} team={team}/>):<p className="muted report-empty">{kind==='project'?'Select a member.':'Select a member or Summary report.'}</p>}</div>}</div></div>;
+ {kind&&<aside className="panel report-picker" aria-label="Report selection"><h2>Members</h2><div className="report-member-list"><button className={selected==='summary'?'primary':'secondary'} aria-pressed={selected==='summary'} onClick={()=>setSelected('summary')}>Summary report</button>{activeMembers.map(o=><button title={o.email} key={o.id} className={selected===o.id?'primary':'secondary'} aria-pressed={selected===o.id} onClick={()=>setSelected(o.id)}>{o.name}</button>)}</div></aside>}</div>
+ {kind&&<div className="report-result">{showReport?(kind==='ticket'?<ReportsPanel officerId={officer?.id} officerName={officer?.name}/>:kind==='project'?<MemberProjectReport key={officer?.id??'summary'} officer={officer}/>:<RegularWorkReport officer={officer} team={team}/>):<p className="muted report-empty">Select a member or Summary report.</p>}</div>}</div></div>;
 }

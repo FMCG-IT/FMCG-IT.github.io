@@ -49,7 +49,7 @@ export default function RegularWork({me,team,onChange}:{me:Member;team:Member[];
  {(['Open','Upcoming','Overdue'] as const).map(group=>{
   const rows=scheduled.filter(t=>group==='Upcoming'?t.day>today:group==='Overdue'?t.deadline<today:t.day<=today&&t.deadline>=today);
   return <div key={group}><h3>{group} ({rows.length})</h3>{rows.length===0&&<p className="muted">No {group.toLowerCase()} tasks.</p>}
-  {rows.map(t=><article className="work-row" key={t.id+t.day}><div>
+  {rows.map(t=><article className={'work-row'+(group==='Overdue'?' work-row-overdue':'')} key={t.id+t.day}><div>
    <label className="checkbox">{group==='Open'&&<input type="checkbox" checked={t.completed} disabled={busy||t.completed||t.officer!==me.id} onChange={()=>void save({action:'complete',task:t.id,day:t.day})}/>}<b>{t.title}</b></label>
    <small>{repeatLabel(t.repeat_months)} · {t.day} to {t.deadline} (BDT){manager?' · '+t.name:''}</small>
    {t.completed_at&&<small>Completed {scheduleDate.format(new Date(t.completed_at))} (BDT)</small>}
@@ -70,6 +70,6 @@ export default function RegularWork({me,team,onChange}:{me:Member;team:Member[];
  {!manager&&!!data?.requests.length&&<section className="panel"><h2>My change requests</h2>{data.requests.map(r=><div className="work-row" key={r.id}><span>{r.title} · {r.kind}</span><b>{r.status}</b></div>)}</section>}
  <section id="work-report" className="panel"><h2>{manager?'Daily work report':'Past work & missed tasks'}</h2><form className="work-form" onSubmit={e=>{e.preventDefault();setError('');setApplied({...range})}}><label>From<input type="date" value={range.from} onChange={e=>setRange({...range,from:e.target.value})}/></label><label>To<input type="date" value={range.to} onChange={e=>setRange({...range,to:e.target.value})}/></label><button className="secondary">Apply dates</button></form><label className="checkbox"><input type="checkbox" checked={showAll} onChange={e=>setShowAll(e.target.checked)}/> Include all completed work</label>
  {!history.length&&<p className="muted">No matching records. Default range: past 7 days.</p>}
- {history.map(t=><article key={t.id+t.day} className="work-row"><div><b>{t.title}</b><small>{t.day}{manager?' · '+t.name:''}{t.approved?' · Manager approved':''}</small>{t.reason&&<p>{t.reason}</p>}{t.request&&<small>Reason: {t.request}</small>}</div><div className="work-actions">{showStatus(t,true)}{!t.completed&&t.officer===me.id&&t.request!=='Pending'&&<button className="secondary" onClick={()=>setAction({action:'reason',task:t.id,day:t.day,title:t.title})}>{t.request==='Rejected'?'Resubmit reason':'Submit reason'}</button>}</div></article>)}</section>
+ {history.map(t=><article key={t.id+t.day} className={'work-row'+(!t.completed?' work-row-overdue':'')}><div><b>{t.title}</b><small>{t.day}{manager?' · '+t.name:''}{t.approved?' · Manager approved':''}</small>{t.reason&&<p>{t.reason}</p>}{t.request&&<small>Reason: {t.request}</small>}</div><div className="work-actions">{showStatus(t,true)}{!t.completed&&t.officer===me.id&&t.request!=='Pending'&&<button className="secondary" onClick={()=>setAction({action:'reason',task:t.id,day:t.day,title:t.title})}>{t.request==='Rejected'?'Resubmit reason':'Submit reason'}</button>}</div></article>)}</section>
  </div>;
 }

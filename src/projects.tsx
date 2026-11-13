@@ -65,6 +65,8 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
   return ()=>{active=false;clearInterval(timer);};
  },[projects]);
  const project=editing==='new'?undefined:editing;
+ const todayBDT=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Dhaka',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ const isOverdue=(project:Project)=>project.status!=='Completed'&&project.approval_status!=='Pending'&&project.deadline<todayBDT;
  const selected=projects?.find(p=>p.id===selectedId);
  const [history,setHistory]=useState<{id:number;rows?:ProjectUpdate[];error?:string}>();
  const [historyRevision,setHistoryRevision]=useState(0);
@@ -150,11 +152,11 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
      {label}<span aria-hidden="true">{key===column?(descending?'↓':'↑'):'↕'}</span>
     </button>
    </th>)}</tr></thead>
-   <tbody>{rows?.length?rows.map(p=><tr key={p.id} className="ticket-row" onClick={()=>showProject(p)}>
+   <tbody>{rows?.length?rows.map(p=><tr key={p.id} className={'ticket-row'+(isOverdue(p)?' ticket-overdue':'')} onClick={()=>showProject(p)}>
     <td className="ticket-id">{projectLabel(p.id)}</td>
     <td><button className="ticket-title" onClick={e=>{e.stopPropagation();showProject(p)}}>{p.subject}</button>{filter!=='All projects'&&p.approval_status==='Pending'&&<small>Pending approval</small>}</td>
     <td>{p.creator_name}</td><td><time dateTime={p.created_at}>{createdDate.format(new Date(p.created_at))}</time></td>
-    <td>{p.assignee_name}</td><td><time dateTime={p.deadline}>{p.deadline}</time></td><td className="project-update">{p.latest_update||'—'}</td>
+    <td>{p.assignee_name}</td><td><time dateTime={p.deadline}>{p.deadline}</time>{isOverdue(p)&&<small>Overdue</small>}</td><td className="project-update">{p.latest_update||'—'}</td>
     {filter==='All projects'&&<td>{p.approval_status==='Pending'?'Pending approval':p.status}</td>}
    </tr>):<tr><td colSpan={filter==='All projects'?8:7}>{error?'Projects could not be loaded.':projects?'No projects in this view.':'Loading projects…'}</td></tr>}</tbody>
   </table></div></section></>}

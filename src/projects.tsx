@@ -13,6 +13,7 @@ const filters=['New project','Ongoing project','Completed','All projects'] as co
 const labels=['New project','Ongoing project','Completed projects','All projects'];
 export type Project={
  office:string|null;team:ITSection|null;priority:string;description:string;
+ approval_status?:'Approved'|'Pending';
  id:number; subject:string; created_by:string; creator_name:string; created_at:string;
  assignee:string; assignee_name:string; deadline:string; latest_update:string; status:typeof phases[number];
 };
@@ -38,9 +39,16 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
   return ()=>{active=false};
  },[]);
  const rows=projects?.filter(p=>filter==='All projects'||p.status===filter);
+ useEffect(()=>{
+  if(!projects?.some(p=>p.approval_status==='Pending'))return;
+  let active=true;
+  const refresh=()=>void readProjects().then(rows=>{if(active)setProjects(rows)}).catch(()=>{});
+  const timer=setInterval(refresh,15000);
+  return ()=>{active=false;clearInterval(timer);};
+ },[projects]);
  const project=editing==='new'?undefined:editing;
  const selected=projects?.find(p=>p.id===selectedId);
- const canEdit=(p:Project)=>me.manager===1||me.id===p.created_by||me.id===p.assignee;
+ const canEdit=(p:Project)=>p.approval_status!=='Pending'&&(me.manager===1||me.id===p.created_by||me.id===p.assignee);
  const open=(value:Project|'new')=>{
   const officer=value==='new'?'':value.assignee;
   const member=team.find(o=>o.id===officer);
@@ -78,10 +86,11 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
    </form>);
  return <div className="project-page">
   <div className="heading"><h1>{selected?'Project details':'Project'}</h1>{!selected&&<button className="primary" disabled={!projects} onClick={()=>open('new')}>Add project</button>}</div>
+  {selectedId!==undefined&&!selected&&!error&&<p role="status">Project is no longer listed.</p>}
   {selected?<div className="project-detail">
    <button className="text-button" disabled={busy} onClick={()=>{setEditing(undefined);setSelectedId(undefined)}}><ArrowLeft size={16}/> Back to projects</button>
    <div className="detail-grid">
-    <section className="panel"><div className="section-head"><span className="eyebrow">{projectLabel(selected.id)}</span><span className="badge">{selected.status}</span></div>
+    <section className="panel"><div className="section-head"><span className="eyebrow">{projectLabel(selected.id)}</span><span className="badge">{selected.approval_status==='Pending'?'Pending approval':selected.status}</span></div>
      <h2>{selected.subject}</h2><p className="description">{selected.description||'No additional description.'}</p>
      <div className="facts">
       <span>Office / area<b>{selected.office??'—'}</b></span><span>Team<b>{teamLabel(selected.team??sectionFor(team.find(o=>o.id===selected.assignee)?.specialty??''))}</b></span>
@@ -91,6 +100,8 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
      </div>
      <h3>Latest update</h3><p className="description">{selected.latest_update||'No updates yet.'}</p>
     </section>
+    {selected.approval_status==='Pending'&&<section className="panel"><h3>Pending approval</h3><p>Update and status changes are available after Manager approval.</p></section>}
+    {canEdit(selected)&&project?.id!==selected.id&&<section className="panel"><h3>Manage project</h3><button className="secondary" onClick={()=>open(selected)}>Edit project and status</button></section>}
     {canEdit(selected)&&project?.id===selected.id&&<section className="panel"><h3>Manage project</h3>{projectForm}<DeleteItem key={selected.id} kind="project" id={selected.id} manager={me.manager===1} onDelete={()=>{setProjects(previous=>previous?.filter(p=>p.id!==selected.id));setEditing(undefined);setSelectedId(undefined)}}/>{error&&<p className="error" role="alert">{error}</p>}</section>}
    </div>
   </div>:<>
@@ -101,10 +112,10 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
    <thead><tr>{['Project ID','Subject','Created by','Created date (BDT)','Assigned to','Deadline (BDT)','Update',...(filter==='All projects'?['Status']:[])].map(label=><th key={label} scope="col">{label}</th>)}</tr></thead>
    <tbody>{rows?.length?rows.map(p=><tr key={p.id} className="ticket-row" onClick={()=>showProject(p)}>
     <td className="ticket-id">{projectLabel(p.id)}</td>
-    <td><button className="ticket-title" onClick={e=>{e.stopPropagation();showProject(p)}}>{p.subject}</button></td>
+    <td><button className="ticket-title" onClick={e=>{e.stopPropagation();showProject(p)}}>{p.subject}</button>{filter!=='All projects'&&p.approval_status==='Pending'&&<small>Pending approval</small>}</td>
     <td>{p.creator_name}</td><td><time dateTime={p.created_at}>{createdDate.format(new Date(p.created_at))}</time></td>
     <td>{p.assignee_name}</td><td><time dateTime={p.deadline}>{p.deadline}</time></td><td className="project-update">{p.latest_update||'—'}</td>
-    {filter==='All projects'&&<td>{p.status}</td>}
+    {filter==='All projects'&&<td>{p.approval_status==='Pending'?'Pending approval':p.status}</td>}
    </tr>):<tr><td colSpan={filter==='All projects'?8:7}>{error?'Projects could not be loaded.':projects?'No projects in this view.':'Loading projects…'}</td></tr>}</tbody>
   </table></div></section></>}
   {!selected&&editing==='new'&&<div className="overlay"><section className="dialog" role="dialog" aria-modal="true" aria-labelledby="project-form-title">

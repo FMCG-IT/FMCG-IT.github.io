@@ -83,12 +83,16 @@ export async function readNotifications(ticket:string|null=null,seenAt:string|nu
  if(error)throw Error(error.message);return data as {unread:number;items:{ticket:string;message:string;updated_at:string;read_at:string|null}[]};
 }
 
-async function regularWorkRpc<T>(name:string,args?:Record<string,unknown>):Promise<T>{
+async function deskRpc<T>(name:string,args?:Record<string,unknown>):Promise<T>{
  if(!supabase)throw Error('Supabase is not configured.');
  const {data,error}=await supabase.rpc(name,args);
  if(error)throw Error(error.message);
  return data as T;
 }
-export const readWorkSummary=()=>regularWorkRpc<{today:string;count:number;approvals:number}>('desk_regular_work_summary');
-export const readRegularWork=(from:string|null,to:string|null)=>regularWorkRpc<import('./regular-work').WorkData>('desk_regular_work_read',{p_from:from,p_to:to});
-export const writeRegularWork=(p:Record<string,unknown>)=>regularWorkRpc<void>('desk_regular_work_write',{p});
+export const readWorkSummary=()=>deskRpc<{today:string;count:number;approvals:number}>('desk_regular_work_summary');
+export const readRegularWork=(from:string|null,to:string|null)=>deskRpc<import('./regular-work').WorkData>('desk_regular_work_read',{p_from:from,p_to:to});
+export const writeRegularWork=(p:Record<string,unknown>)=>deskRpc<void>('desk_regular_work_write',{p});
+
+export const readProjectCount=()=>deskRpc<number>('desk_projects',{p_count_only:true});
+export const readProjects=()=>deskRpc<import('./projects').Project[]>('desk_projects');
+export const saveProject=(p:Record<string,unknown>)=>deskRpc<void>('desk_save_project',{p});

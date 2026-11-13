@@ -357,3 +357,17 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
 .topbar .notifications:has(.notification-list){z-index:10}
 #work-approvals{scroll-margin-top:12px}
 @media(max-width:700px){#work-approvals{scroll-margin-top:175px}}
+
+.project-stat{background:#e9f5fc;border-color:#b7dceb}
+.project-page{display:flex;flex-direction:column;gap:8px;min-height:0}
+.project-filters{display:flex;flex-wrap:wrap;gap:8px}
+.project-filters button{margin:0}
+.project-table .ticket-id,.project-table time{white-space:nowrap}
+.project-update{min-width:140px;white-space:pre-wrap;overflow-wrap:anywhere}
+@media(min-width:1051px){.shell .stats.stats-with-project{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(min-width:701px) and (min-height:520px){
+ .overview-frozen .content>.project-page{flex:1}
+ .project-page .project-table{display:flex;flex-direction:column;flex:1;min-height:0}
+ .project-table>.table-scroll{flex:1;min-height:0;overflow:auto}
+ .project-table thead th{position:sticky;top:0;z-index:2;background:#f1edf9}
+}

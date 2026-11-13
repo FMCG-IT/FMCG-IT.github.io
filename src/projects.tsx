@@ -1,0 +1,62 @@
+import {useEffect,useState} from 'react';
+import {readProjects,saveProject} from './backend';
+
+const phases=['New project','Ongoing project','Completed'] as const;
+const filters=['New project','Ongoing project','Completed','All projects'] as const;
+const labels=['New project','Ongoing project','Completed projects','All projects'];
+export type Project={
+ id:number; subject:string; created_by:string; creator_name:string; created_at:string;
+ assignee:string; assignee_name:string; deadline:string; latest_update:string; status:typeof phases[number];
+};
+type Officer={id:string;name:string};
+const createdDate=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Dhaka',dateStyle:'medium',timeStyle:'short'});
+
+export default function Projects({me,team}:{me:Officer&{manager:number};team:Officer[]}){
+ const [projects,setProjects]=useState<Project[]>(),[filter,setFilter]=useState<typeof filters[number]>('All projects');
+ const [editing,setEditing]=useState<Project|'new'>(),[error,setError]=useState(''),[formError,setFormError]=useState(''),[busy,setBusy]=useState(false);
+ useEffect(()=>{
+  let active=true;
+  void readProjects().then(rows=>{if(active)setProjects(rows)}).catch((e:Error)=>{if(active)setError(e.message)});
+  return ()=>{active=false};
+ },[]);
+ const rows=projects?.filter(p=>filter==='All projects'||p.status===filter);
+ const project=editing==='new'?undefined:editing;
+ const open=(value:Project|'new')=>{setFormError('');setEditing(value)};
+ return <div className="project-page">
+  <div className="heading"><h1>Project</h1><button className="primary" disabled={!projects} onClick={()=>open('new')}>Add project</button></div>
+  <div className="project-filters" aria-label="Filter projects">{filters.map((value,index)=><button key={value} className={filter===value?'primary':'secondary'} aria-pressed={filter===value} onClick={()=>setFilter(value)}>{labels[index]}</button>)}</div>
+  {error&&<p className="error" role="alert">{error}</p>}
+  <section className="ticket-section project-table"><div className="table-scroll ticket-fit-region" tabIndex={0} role="region" aria-label="Projects"><table>
+   <thead><tr>{['Project ID','Subject','Created by','Created date (BDT)','Assigned to','Deadline (BDT)','Update',...(filter==='All projects'?['Status']:[])].map(label=><th key={label} scope="col">{label}</th>)}</tr></thead>
+   <tbody>{rows?.length?rows.map(p=><tr key={p.id}>
+    <td className="ticket-id">PRJ-{String(p.id).padStart(6,'0')}</td>
+    <td>{me.manager===1||me.id===p.created_by||me.id===p.assignee?<button className="ticket-title" onClick={()=>open(p)}>{p.subject}</button>:p.subject}</td>
+    <td>{p.creator_name}</td><td><time dateTime={p.created_at}>{createdDate.format(new Date(p.created_at))}</time></td>
+    <td>{p.assignee_name}</td><td><time dateTime={p.deadline}>{p.deadline}</time></td><td className="project-update">{p.latest_update||'—'}</td>
+    {filter==='All projects'&&<td>{p.status}</td>}
+   </tr>):<tr><td colSpan={filter==='All projects'?8:7}>{error?'Projects could not be loaded.':projects?'No projects in this view.':'Loading projects…'}</td></tr>}</tbody>
+  </table></div></section>
+  {editing&&<div className="overlay"><section className="dialog" role="dialog" aria-modal="true" aria-labelledby="project-form-title">
+   <h2 id="project-form-title">{project?'Update project':'Add project'}</h2>
+   <form onSubmit={async e=>{
+    e.preventDefault();
+    const fields=Object.fromEntries(new FormData(e.currentTarget));
+    setBusy(true);setFormError('');setError('');
+    try{await saveProject({...fields,id:project?.id});}
+    catch(err){setFormError(err instanceof Error?err.message:'Could not save project.');setBusy(false);return;}
+    setEditing(undefined);
+    try{setProjects(await readProjects());}
+    catch(err){setError(err instanceof Error?err.message:'Could not reload projects.');}
+    finally{setBusy(false);}
+   }}>
+    <label>Subject<input name="subject" defaultValue={project?.subject} required maxLength={200}/></label>
+    <label>Assigned to<select name="assignee" defaultValue={project?.assignee??me.id} required>{project&&!team.some(o=>o.id===project.assignee)&&<option value={project.assignee}>{project.assignee_name}</option>}{team.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></label>
+    <label>Deadline (BDT)<input type="date" name="deadline" defaultValue={project?.deadline} required/></label>
+    {project&&<label>Status<select name="status" defaultValue={project.status}>{phases.map(phase=><option key={phase}>{phase}</option>)}</select></label>}
+    <label>Update<textarea name="latest_update" defaultValue={project?.latest_update} maxLength={2000} rows={3}/></label>
+    {formError&&<p className="error" role="alert">{formError}</p>}
+    <div className="work-actions"><button className="primary" disabled={busy}>Save project</button><button type="button" className="secondary" disabled={busy} onClick={()=>setEditing(undefined)}>Cancel</button></div>
+   </form>
+  </section></div>}
+ </div>;
+}

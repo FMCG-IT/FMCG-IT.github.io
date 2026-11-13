@@ -4,7 +4,7 @@ import {sections,sectionFor,type ITSection} from './it-sections';
 import {teamLabel} from './team-assignment';
 import PrioritySelect from './priority-select';
 import {priorityLabel} from './operations';
-import {ArrowLeft,Pencil} from 'lucide-react';
+import {ArrowLeft} from 'lucide-react';
 import {readProjects,saveProject} from './backend';
 
 const phases=['New project','Ongoing project','Completed'] as const;
@@ -21,6 +21,7 @@ const createdDate=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Dhaka',dateSty
 
 export default function Projects({me,team}:{me:Officer&{manager:number};team:Officer[]}){
  const [projects,setProjects]=useState<Project[]>(),[filter,setFilter]=useState<typeof filters[number]>('All projects');
+ const [formRevision,setFormRevision]=useState(0);
  const [selectedId,setSelectedId]=useState<number>();
  const [assignment,setAssignment]=useState({team:'' as ITSection|'',officer:''});
  const [editing,setEditing]=useState<Project|'new'>(),[error,setError]=useState(''),[formError,setFormError]=useState(''),[busy,setBusy]=useState(false);
@@ -37,17 +38,18 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
   const officer=value==='new'?'':value.assignee;
   const member=team.find(o=>o.id===officer);
   setAssignment({team:value==='new'?'':value.team??sectionFor(member?.specialty??''),officer});
-  setFormError('');setEditing(value);
+  setFormError('');setEditing(value);setFormRevision(n=>n+1);
  };
+ const showProject=(p:Project)=>{setSelectedId(p.id);setError('');if(canEdit(p))open(p);};
  const eligible=team.filter(o=>sectionFor(o.specialty)===assignment.team);
- const projectForm=editing&&(<form onSubmit={async e=>{
+ const projectForm=editing&&(<form key={formRevision} onSubmit={async e=>{
     e.preventDefault();
     const fields=Object.fromEntries(new FormData(e.currentTarget));
     setBusy(true);setFormError('');setError('');
     try{await saveProject({...fields,id:project?.id});}
     catch(err){setFormError(err instanceof Error?err.message:'Could not save project.');setBusy(false);return;}
-    setEditing(undefined);
-    try{setProjects(await readProjects());}
+    if(!project)setEditing(undefined);
+    try{const updated=await readProjects();setProjects(updated);const saved=updated.find(row=>row.id===project?.id);if(saved)open(saved);}
     catch(err){setError(err instanceof Error?err.message:'Could not reload projects.');}
     finally{setBusy(false);}
    }}>
@@ -63,7 +65,7 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
     <label>Description<textarea name="description" defaultValue={project?.description} maxLength={10000} rows={3}/></label>
     <label>Update<textarea name="latest_update" defaultValue={project?.latest_update} maxLength={2000} rows={3}/></label>
     {formError&&<p className="error" role="alert">{formError}</p>}
-    <div className="work-actions"><button className="primary" disabled={busy}>Save project</button><button type="button" className="secondary" disabled={busy} onClick={()=>setEditing(undefined)}>Cancel</button></div>
+    <div className="work-actions"><button className="primary" disabled={busy}>Save project</button><button type="button" className="secondary" disabled={busy} onClick={()=>project?open(project):setEditing(undefined)}>{project?'Reset':'Cancel'}</button></div>
    </form>);
  return <div className="project-page">
   <div className="heading"><h1>{selected?'Project details':'Project'}</h1>{!selected&&<button className="primary" disabled={!projects} onClick={()=>open('new')}>Add project</button>}</div>
@@ -80,16 +82,16 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
      </div>
      <h3>Latest update</h3><p className="description">{selected.latest_update||'No updates yet.'}</p>
     </section>
-    {canEdit(selected)&&<section className="panel"><h3>Manage project</h3><>{project?.id===selected.id?projectForm:<button className="secondary" onClick={()=>open(selected)}><Pencil size={14}/> Edit project and status</button>}</>{error&&<p className="error" role="alert">{error}</p>}</section>}
+    {canEdit(selected)&&<section className="panel"><h3>Manage project</h3>{projectForm}{error&&<p className="error" role="alert">{error}</p>}</section>}
    </div>
   </div>:<>
   <div className="project-filters" aria-label="Filter projects">{filters.map((value,index)=><button key={value} className={filter===value?'primary':'secondary'} aria-pressed={filter===value} onClick={()=>setFilter(value)}>{labels[index]}</button>)}</div>
   {error&&<p className="error" role="alert">{error}</p>}
   <section className="ticket-section project-table"><div className="table-scroll ticket-fit-region" tabIndex={0} role="region" aria-label="Projects"><table>
    <thead><tr>{['Project ID','Subject','Created by','Created date (BDT)','Assigned to','Deadline (BDT)','Update',...(filter==='All projects'?['Status']:[])].map(label=><th key={label} scope="col">{label}</th>)}</tr></thead>
-   <tbody>{rows?.length?rows.map(p=><tr key={p.id} className="ticket-row" onClick={()=>setSelectedId(p.id)}>
+   <tbody>{rows?.length?rows.map(p=><tr key={p.id} className="ticket-row" onClick={()=>showProject(p)}>
     <td className="ticket-id">{projectLabel(p.id)}</td>
-    <td><button className="ticket-title" onClick={e=>{e.stopPropagation();setSelectedId(p.id)}}>{p.subject}</button></td>
+    <td><button className="ticket-title" onClick={e=>{e.stopPropagation();showProject(p)}}>{p.subject}</button></td>
     <td>{p.creator_name}</td><td><time dateTime={p.created_at}>{createdDate.format(new Date(p.created_at))}</time></td>
     <td>{p.assignee_name}</td><td><time dateTime={p.deadline}>{p.deadline}</time></td><td className="project-update">{p.latest_update||'—'}</td>
     {filter==='All projects'&&<td>{p.status}</td>}

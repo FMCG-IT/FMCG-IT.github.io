@@ -1,5 +1,5 @@
 import {useEffect,useState,useRef} from 'react';
-import {readNotifications,writeDesk} from './backend';
+import {readNotifications,writeDesk,readDeleteRequests,writeDeleteAction,type DeleteRequest} from './backend';
 export const overdueDays=(priority:string)=>({Low:30,Medium:10,High:3,Critical:1,Urgent:1}[priority]??10);
 export const priorityLabel=(priority:string)=>priority==='Critical'?'Urgent':priority;
 export const automaticDueAt=(t:{created:string;priority:string})=>Date.parse(t.created)+overdueDays(t.priority)*24*60*60*1000;
@@ -8,6 +8,25 @@ export function Notifications({openTicket,workApprovals=0}:{openTicket:(id:strin
  const container=useRef<HTMLDivElement>(null);
 
  const [data,setData]=useState<Awaited<ReturnType<typeof readNotifications>>>({unread:0,items:[]}),[error,setError]=useState(''),[open,setOpen]=useState(false);
+ const [deletions,setDeletions]=useState<DeleteRequest[]>([]);
+ const [reviewing,setReviewing]=useState(false);
+ useEffect(()=>{
+  let active=true;
+  const refresh=()=>void readDeleteRequests().then(rows=>{if(active)setDeletions(rows)}).catch(()=>{});
+  refresh();const timer=setInterval(refresh,30000);
+  return ()=>{active=false;clearInterval(timer)};
+ },[]);
+ async function review(request:DeleteRequest,action:'approve'|'reject'){
+  if(action==='approve'&&!confirm(`Permanently delete this ${request.kind}?`))return;
+  setReviewing(true);setError('');
+  try{
+   await writeDeleteAction({action,id:request.id});
+   setDeletions(rows=>rows.filter(row=>row.id!==request.id));
+   if(action==='approve')window.location.reload();
+  }catch(e){setError(e instanceof Error?e.message:'Could not review request.');}
+  finally{setReviewing(false);}
+ }
+ const total=data.unread+workApprovals+deletions.length;
  useEffect(()=>{let active=true;const refresh=()=>{if(document.visibilityState==='hidden')return;void readNotifications().then(r=>{if(active){setData(r);setError('')}}).catch((e:Error)=>{if(active)setError(e.message)});};refresh();const timer=setInterval(refresh,30000);document.addEventListener('visibilitychange',refresh);return()=>{active=false;clearInterval(timer);document.removeEventListener('visibilitychange',refresh)}},[]);
  useEffect(()=>{
   if(!open)return;
@@ -16,11 +35,14 @@ export function Notifications({openTicket,workApprovals=0}:{openTicket:(id:strin
   return ()=>document.removeEventListener('pointerdown',dismiss,true);
  },[open]);
  async function select(item:typeof data.items[number]){openTicket(item.ticket);setOpen(false);try{setData(await readNotifications(item.ticket,item.updated_at))}catch(e){setError(e instanceof Error?e.message:'Could not mark as read')}}
- return <div ref={container} className="notifications"><button className="secondary" aria-expanded={open} onClick={()=>setOpen(!open)}>Notifications {data.unread+workApprovals>0&&<b className="notification-count">({data.unread+workApprovals})</b>}</button>{open&&<section className="panel notification-list"><h3>Notifications</h3>{workApprovals>0&&<button type="button" className="notification-item unread" onClick={()=>{
+ return <div ref={container} className="notifications"><button className="secondary" aria-expanded={open} onClick={()=>setOpen(!open)}>Notifications {total>0&&<b className="notification-count">({total})</b>}</button>{open&&<section className="panel notification-list"><h3>Notifications</h3>{deletions.map(request=><article className="notification-item unread" key={request.id}>
+ <b>Delete {request.kind} request</b><small>{request.subject} · {request.name}</small>
+ <div className="work-actions"><button className="primary" disabled={reviewing} onClick={()=>void review(request,'approve')}>Approve</button><button className="secondary" disabled={reviewing} onClick={()=>void review(request,'reject')}>Reject</button></div>
+ </article>)}{workApprovals>0&&<button type="button" className="notification-item unread" onClick={()=>{
  setOpen(false);
  if(location.hash==='#/regular-work/approvals')document.getElementById('work-approvals')?.scrollIntoView({block:'start'});
  else location.hash='/regular-work/approvals';
- }}>{workApprovals} regular work approval {workApprovals===1?'request':'requests'}</button>}<small>Latest 30 ticket conversations · refreshes every 30 seconds</small>{error&&<p className="error" role="alert">{error}</p>}{!data.items.length&&!error&&!workApprovals&&<p>No notifications yet.</p>}{data.items.map(item=><button key={item.ticket} className={'notification-item'+(!item.read_at?' unread':'')} onClick={()=>void select(item)}>{item.message}<small>{new Date(item.updated_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} BDT</small></button>)}</section>}</div>;
+ }}>{workApprovals} regular work approval {workApprovals===1?'request':'requests'}</button>}<small>Latest 30 ticket conversations · refreshes every 30 seconds</small>{error&&<p className="error" role="alert">{error}</p>}{!data.items.length&&!error&&!workApprovals&&!deletions.length&&<p>No notifications yet.</p>}{data.items.map(item=><button key={item.ticket} className={'notification-item'+(!item.read_at?' unread':'')} onClick={()=>void select(item)}>{item.message}<small>{new Date(item.updated_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} BDT</small></button>)}</section>}</div>;
 }
 export function ManagerTransfer({team,onDone}:{team:any[];onDone:()=>Promise<void>}){
  const [target,setTarget]=useState(''),[confirmation,setConfirmation]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[open,setOpen]=useState(false);

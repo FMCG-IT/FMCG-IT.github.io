@@ -1,3 +1,4 @@
+import DeleteItem from './delete-item';
 import {useEffect,useState} from 'react';
 import {offices} from './offices';
 import {sections,sectionFor,type ITSection} from './it-sections';
@@ -62,8 +63,8 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
     </div>
     <label>Deadline (BDT)<input type="date" name="deadline" defaultValue={project?.deadline} required/></label>
     {project&&<label>Status<select name="status" defaultValue={project.status}>{phases.map(phase=><option key={phase}>{phase}</option>)}</select></label>}
-    <label>Description<textarea name="description" defaultValue={project?.description} maxLength={10000} rows={3}/></label>
-    <label>Update<textarea name="latest_update" defaultValue={project?.latest_update} maxLength={2000} rows={3}/></label>
+    {!project&&<label>Description<textarea name="description" required maxLength={10000} rows={3}/></label>}
+    {project&&<label>Update<textarea name="latest_update" defaultValue={project.latest_update} maxLength={2000} rows={3}/></label>}
     {formError&&<p className="error" role="alert">{formError}</p>}
     <div className="work-actions"><button className="primary" disabled={busy}>Save project</button><button type="button" className="secondary" disabled={busy} onClick={()=>project?open(project):setEditing(undefined)}>{project?'Reset':'Cancel'}</button></div>
    </form>);
@@ -82,7 +83,7 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
      </div>
      <h3>Latest update</h3><p className="description">{selected.latest_update||'No updates yet.'}</p>
     </section>
-    {canEdit(selected)&&<section className="panel"><h3>Manage project</h3>{projectForm}{error&&<p className="error" role="alert">{error}</p>}</section>}
+    {canEdit(selected)&&<section className="panel"><h3>Manage project</h3>{projectForm}<DeleteItem key={selected.id} kind="project" id={selected.id} manager={me.manager===1} onDelete={()=>{setProjects(previous=>previous?.filter(p=>p.id!==selected.id));setEditing(undefined);setSelectedId(undefined)}}/>{error&&<p className="error" role="alert">{error}</p>}</section>}
    </div>
   </div>:<>
   <div className="project-filters" aria-label="Filter projects">{filters.map((value,index)=><button key={value} className={filter===value?'primary':'secondary'} aria-pressed={filter===value} onClick={()=>setFilter(value)}>{labels[index]}</button>)}</div>

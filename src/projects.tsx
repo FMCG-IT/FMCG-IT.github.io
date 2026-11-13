@@ -22,6 +22,8 @@ const createdDate=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Dhaka',dateSty
 
 export default function Projects({me,team}:{me:Officer&{manager:number};team:Officer[]}){
  const [projects,setProjects]=useState<Project[]>(),[filter,setFilter]=useState<typeof filters[number]>('All projects');
+ const [notice,setNotice]=useState('');
+ const [updateDraft,setUpdateDraft]=useState('');
  const [formRevision,setFormRevision]=useState(0);
  const [selectedId,setSelectedId]=useState<number>();
  const [assignment,setAssignment]=useState({team:'' as ITSection|'',officer:''});
@@ -43,7 +45,7 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
   const officer=value==='new'?'':value.assignee;
   const member=team.find(o=>o.id===officer);
   setAssignment({team:value==='new'?'':value.team??sectionFor(member?.specialty??''),officer});
-  setFormError('');setEditing(value);setFormRevision(n=>n+1);
+  setFormError('');setUpdateDraft('');setEditing(value);setFormRevision(n=>n+1);
  };
  const showProject=(p:Project)=>{setSelectedId(p.id);setError('');if(canEdit(p))open(p);};
  const eligible=team.filter(o=>sectionFor(o.specialty)===assignment.team);
@@ -51,10 +53,11 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
     e.preventDefault();
     if(busy)return;
     const fields=Object.fromEntries(new FormData(e.currentTarget));
-    setBusy(true);setFormError('');setError('');
+    setBusy(true);setFormError('');setError('');setNotice('');
     try{await saveProject({...fields,id:project?.id});}
     catch(err){setFormError(err instanceof Error?err.message:'Could not save project.');setBusy(false);return;}
-    if(!project)setEditing(undefined);
+    setUpdateDraft('');
+    if(!project){setEditing(undefined);setNotice('Project submitted for Manager approval.');}
     try{const updated=await readProjects();setProjects(updated);const saved=updated.find(row=>row.id===project?.id);if(saved)setEditing(saved);}
     catch(err){setError(err instanceof Error?err.message:'Could not reload projects.');}
     finally{setBusy(false);}
@@ -69,7 +72,7 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
     <label>Deadline (BDT)<input type="date" name="deadline" defaultValue={project?.deadline} required/></label>
     {project&&<label>Status<select name="status" defaultValue={project.status}>{phases.map(phase=><option key={phase}>{phase}</option>)}</select></label>}
     {!project&&<label>Description<textarea name="description" required maxLength={10000} rows={3}/></label>}
-    {project&&<label>Update<textarea name="latest_update" defaultValue={project.latest_update} maxLength={2000} rows={3}/></label>}
+    {project&&<label>Update<textarea name="latest_update" value={updateDraft} onChange={e=>setUpdateDraft(e.target.value)} maxLength={2000} rows={3}/></label>}
     {formError&&<p className="error" role="alert">{formError}</p>}
     <div className="work-actions"><button className="primary" disabled={busy}>Save project</button><button type="button" className="secondary" disabled={busy} onClick={()=>project?open(project):setEditing(undefined)}>{project?'Reset':'Cancel'}</button></div>
    </form>);
@@ -91,6 +94,7 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
     {canEdit(selected)&&project?.id===selected.id&&<section className="panel"><h3>Manage project</h3>{projectForm}<DeleteItem key={selected.id} kind="project" id={selected.id} manager={me.manager===1} onDelete={()=>{setProjects(previous=>previous?.filter(p=>p.id!==selected.id));setEditing(undefined);setSelectedId(undefined)}}/>{error&&<p className="error" role="alert">{error}</p>}</section>}
    </div>
   </div>:<>
+  {notice&&<p role="status">{notice}</p>}
   <div className="project-filters" aria-label="Filter projects">{filters.map((value,index)=><button key={value} className={filter===value?'primary':'secondary'} aria-pressed={filter===value} onClick={()=>setFilter(value)}>{labels[index]}</button>)}</div>
   {error&&<p className="error" role="alert">{error}</p>}
   <section className="ticket-section project-table"><div className="table-scroll ticket-fit-region" tabIndex={0} role="region" aria-label="Projects"><table>

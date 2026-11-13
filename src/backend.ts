@@ -103,3 +103,6 @@ export const writeDeleteAction=(p:Record<string,unknown>)=>deskRpc<void>('desk_d
 
 export type DeleteResult=Pick<DeleteRequest,'id'|'kind'|'subject'>&{status:'Approved'|'Rejected'};
 export const readDeleteResults=(id?:string)=>deskRpc<DeleteResult[]>('desk_delete_results',{p_read:id??null});
+
+export type ProjectApproval={id:number;subject:string;creator:string;assignee:string;deadline:string;description:string;team:string;office:string;priority:string};
+export const readProjectApprovals=(id?:number,approve?:boolean)=>deskRpc<ProjectApproval[]>('desk_project_approvals',{p_id:id??null,p_approve:approve??null});

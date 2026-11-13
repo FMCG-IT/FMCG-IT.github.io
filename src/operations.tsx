@@ -1,5 +1,5 @@
 import {useEffect,useState,useRef} from 'react';
-import {readNotifications,writeDesk,readDeleteRequests,writeDeleteAction,readDeleteResults,type DeleteResult,type DeleteRequest} from './backend';
+import {readNotifications,writeDesk,readDeleteRequests,writeDeleteAction,readDeleteResults,type DeleteResult,type DeleteRequest,readProjectApprovals,type ProjectApproval} from './backend';
 export const overdueDays=(priority:string)=>({Low:30,Medium:10,High:3,Critical:1,Urgent:1}[priority]??10);
 export const priorityLabel=(priority:string)=>priority==='Critical'?'Urgent':priority;
 export const automaticDueAt=(t:{created:string;priority:string})=>Date.parse(t.created)+overdueDays(t.priority)*24*60*60*1000;
@@ -10,11 +10,13 @@ export function Notifications({openTicket,workApprovals=0}:{openTicket:(id:strin
  const [data,setData]=useState<Awaited<ReturnType<typeof readNotifications>>>({unread:0,items:[]}),[error,setError]=useState(''),[open,setOpen]=useState(false);
  const [deletions,setDeletions]=useState<DeleteRequest[]>([]);
  const [results,setResults]=useState<DeleteResult[]>([]);
+ const [projectRequests,setProjectRequests]=useState<ProjectApproval[]>([]);
  const [reviewing,setReviewing]=useState(false);
  useEffect(()=>{
   let active=true;
   const refresh=()=>{
    void readDeleteRequests().then(rows=>{if(active)setDeletions(rows)}).catch(()=>{});
+   void readProjectApprovals().then(rows=>{if(active)setProjectRequests(rows)}).catch(()=>{});
    void readDeleteResults().then(rows=>{if(active)setResults(rows)}).catch(()=>{});
   };
   refresh();const timer=setInterval(refresh,30000);
@@ -30,7 +32,13 @@ export function Notifications({openTicket,workApprovals=0}:{openTicket:(id:strin
   }catch(e){setError(e instanceof Error?e.message:'Could not review request.');}
   finally{setReviewing(false);}
  }
- const total=data.unread+workApprovals+deletions.length+results.length;
+ async function reviewProject(id:number,approve:boolean){
+  setReviewing(true);setError('');
+  try{setProjectRequests(await readProjectApprovals(id,approve));if(approve)window.location.reload();}
+  catch(e){setError(e instanceof Error?e.message:'Could not review project.');}
+  finally{setReviewing(false);}
+ }
+ const total=data.unread+workApprovals+deletions.length+results.length+projectRequests.length;
  useEffect(()=>{let active=true;const refresh=()=>{if(document.visibilityState==='hidden')return;void readNotifications().then(r=>{if(active){setData(r);setError('')}}).catch((e:Error)=>{if(active)setError(e.message)});};refresh();const timer=setInterval(refresh,30000);document.addEventListener('visibilitychange',refresh);return()=>{active=false;clearInterval(timer);document.removeEventListener('visibilitychange',refresh)}},[]);
  useEffect(()=>{
   if(!open)return;
@@ -39,7 +47,14 @@ export function Notifications({openTicket,workApprovals=0}:{openTicket:(id:strin
   return ()=>document.removeEventListener('pointerdown',dismiss,true);
  },[open]);
  async function select(item:typeof data.items[number]){openTicket(item.ticket);setOpen(false);try{setData(await readNotifications(item.ticket,item.updated_at))}catch(e){setError(e instanceof Error?e.message:'Could not mark as read')}}
- return <div ref={container} className="notifications"><button className="secondary" aria-expanded={open} onClick={()=>setOpen(!open)}>Notifications {total>0&&<b className="notification-count">({total})</b>}</button>{open&&<section className="panel notification-list"><h3>Notifications</h3>{results.map(result=><article className="notification-item unread" key={result.id}>
+ return <div ref={container} className="notifications"><button className="secondary" aria-expanded={open} onClick={()=>setOpen(!open)}>Notifications {total>0&&<b className="notification-count">({total})</b>}</button>{open&&<section className="panel notification-list"><h3>Notifications</h3>{projectRequests.map(project=><article className="notification-item unread" key={project.id}>
+ <details><summary>New project approval · {project.subject}</summary>
+ <small>{project.creator} · Assigned to {project.assignee}</small>
+ <small>{project.office} · {project.team} · {project.priority} · Deadline {project.deadline}</small>
+ <p>{project.description}</p>
+ </details>
+ <div className="work-actions"><button className="primary" disabled={reviewing} onClick={()=>void reviewProject(project.id,true)}>Approve</button><button className="secondary" disabled={reviewing} onClick={()=>void reviewProject(project.id,false)}>Reject</button></div>
+ </article>)}{results.map(result=><article className="notification-item unread" key={result.id}>
  <b>{result.status==='Approved'?'Approved':'Rejected'} delete {result.kind} request</b><small>{result.subject}</small>
  <button type="button" className="text-button" onClick={()=>void readDeleteResults(result.id).then(setResults).catch((e:Error)=>setError(e.message))}>Mark as read</button>
  </article>)}{deletions.map(request=><article className="notification-item unread" key={request.id}>
@@ -49,7 +64,7 @@ export function Notifications({openTicket,workApprovals=0}:{openTicket:(id:strin
  setOpen(false);
  if(location.hash==='#/regular-work/approvals')document.getElementById('work-approvals')?.scrollIntoView({block:'start'});
  else location.hash='/regular-work/approvals';
- }}>{workApprovals} regular work approval {workApprovals===1?'request':'requests'}</button>}<small>Latest 30 ticket conversations · refreshes every 30 seconds</small>{error&&<p className="error" role="alert">{error}</p>}{!data.items.length&&!error&&!workApprovals&&!deletions.length&&!results.length&&<p>No notifications yet.</p>}{data.items.map(item=><button key={item.ticket} className={'notification-item'+(!item.read_at?' unread':'')} onClick={()=>void select(item)}>{item.message}<small>{new Date(item.updated_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} BDT</small></button>)}</section>}</div>;
+ }}>{workApprovals} regular work approval {workApprovals===1?'request':'requests'}</button>}<small>Latest 30 ticket conversations · refreshes every 30 seconds</small>{error&&<p className="error" role="alert">{error}</p>}{!data.items.length&&!error&&!workApprovals&&!deletions.length&&!results.length&&!projectRequests.length&&<p>No notifications yet.</p>}{data.items.map(item=><button key={item.ticket} className={'notification-item'+(!item.read_at?' unread':'')} onClick={()=>void select(item)}>{item.message}<small>{new Date(item.updated_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} BDT</small></button>)}</section>}</div>;
 }
 export function ManagerTransfer({team,onDone}:{team:any[];onDone:()=>Promise<void>}){
  const [target,setTarget]=useState(''),[confirmation,setConfirmation]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[open,setOpen]=useState(false);

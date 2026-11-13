@@ -1,3 +1,4 @@
+import {showSuccess} from './success-notice';
 import {readProjectNotifications} from './backend';
 import {useEffect,useState,useRef} from 'react';
 import {readNotifications,writeDesk,readDeleteRequests,writeDeleteAction,readDeleteResults,type DeleteResult,type DeleteRequest,readProjectApprovals,type ProjectApproval} from './backend';
@@ -5,7 +6,7 @@ export const overdueDays=(priority:string)=>({Low:30,Medium:10,High:3,Critical:1
 export const priorityLabel=(priority:string)=>priority==='Critical'?'Urgent':priority;
 export const automaticDueAt=(t:{created:string;priority:string})=>Date.parse(t.created)+overdueDays(t.priority)*24*60*60*1000;
 export const overdue=(t:{status:string;created:string;priority:string},now=Date.now())=>t.status!=='Closed'&&Number.isFinite(automaticDueAt(t))&&now>=automaticDueAt(t);
-export function Notifications({openTicket,workApprovals=0}:{openTicket:(id:string)=>void;workApprovals?:number}){
+export function Notifications({openTicket,workApprovals=0,onItemsChanged}:{openTicket:(id:string)=>void;workApprovals?:number;onItemsChanged:()=>void}){
  const container=useRef<HTMLDivElement>(null);
 
  const [data,setData]=useState<Awaited<ReturnType<typeof readNotifications>>>({unread:0,items:[]}),[error,setError]=useState(''),[open,setOpen]=useState(false);
@@ -31,13 +32,14 @@ export function Notifications({openTicket,workApprovals=0}:{openTicket:(id:strin
   try{
    await writeDeleteAction({action,id:request.id});
    setDeletions(rows=>rows.filter(row=>row.id!==request.id));
-   if(action==='approve')window.location.reload();
+   showSuccess(action==='approve'?'Delete request approved successfully':'Delete request rejected successfully');
+   if(action==='approve'){onItemsChanged();window.dispatchEvent(new Event('desk-items-changed'));}
   }catch(e){setError(e instanceof Error?e.message:'Could not review request.');}
   finally{setReviewing(false);}
  }
  async function reviewProject(id:number,approve:boolean){
   setReviewing(true);setError('');
-  try{setProjectRequests(await readProjectApprovals(id,approve));if(approve)window.location.reload();}
+  try{setProjectRequests(await readProjectApprovals(id,approve));showSuccess(approve?'Project approved successfully':'Project rejected successfully');window.dispatchEvent(new Event('desk-items-changed'));}
   catch(e){setError(e instanceof Error?e.message:'Could not review project.');}
   finally{setReviewing(false);}
  }
@@ -77,5 +79,5 @@ export function Notifications({openTicket,workApprovals=0}:{openTicket:(id:strin
 export function ManagerTransfer({team,onDone}:{team:any[];onDone:()=>Promise<void>}){
  const [target,setTarget]=useState(''),[confirmation,setConfirmation]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[open,setOpen]=useState(false);
  const chosen=team.find(o=>o.id===target);
- return <section className="panel manager-transfer"><button className="secondary" onClick={()=>setOpen(!open)}>Transfer Manager access</button>{open&&<form onSubmit={async e=>{e.preventDefault();setBusy(true);setError('');try{await writeDesk({action:'manager_transfer',target,confirmation});await onDone()}catch(e){setError(e instanceof Error?e.message:'Transfer failed')}finally{setBusy(false)}}}><h3>Change the Manager account</h3><p>The selected officer gains Manager access. Your account becomes a regular IT member. Tickets and history stay available.</p><label>New Manager<select required value={target} onChange={e=>{setTarget(e.target.value);setConfirmation('')}}><option value="">Select officer</option>{team.map(o=><option key={o.id} value={o.id}>{o.name} — {o.email}</option>)}</select></label>{chosen&&<label>Type {chosen.email} to confirm<input required autoComplete="off" value={confirmation} onChange={e=>setConfirmation(e.target.value)}/></label>}{error&&<p className="error" role="alert">{error}</p>}<button className="primary" disabled={busy||!chosen||confirmation!==chosen.email}>{busy?'Transferring…':'Confirm transfer'}</button></form>}</section>;
+ return <section className="panel manager-transfer"><button className="secondary" onClick={()=>setOpen(!open)}>Transfer Manager access</button>{open&&<form onSubmit={async e=>{e.preventDefault();setBusy(true);setError('');try{await writeDesk({action:'manager_transfer',target,confirmation});showSuccess('Manager access transferred successfully');await onDone()}catch(e){setError(e instanceof Error?e.message:'Transfer failed')}finally{setBusy(false)}}}><h3>Change the Manager account</h3><p>The selected officer gains Manager access. Your account becomes a regular IT member. Tickets and history stay available.</p><label>New Manager<select required value={target} onChange={e=>{setTarget(e.target.value);setConfirmation('')}}><option value="">Select officer</option>{team.map(o=><option key={o.id} value={o.id}>{o.name} — {o.email}</option>)}</select></label>{chosen&&<label>Type {chosen.email} to confirm<input required autoComplete="off" value={confirmation} onChange={e=>setConfirmation(e.target.value)}/></label>}{error&&<p className="error" role="alert">{error}</p>}<button className="primary" disabled={busy||!chosen||confirmation!==chosen.email}>{busy?'Transferring…':'Confirm transfer'}</button></form>}</section>;
 }

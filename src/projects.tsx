@@ -1,3 +1,4 @@
+import {showSuccess} from './success-notice';
 import DeleteItem from './delete-item';
 import {useEffect,useState} from 'react';
 import {offices} from './offices';
@@ -21,7 +22,7 @@ type Officer={id:string;name:string;specialty:string};
 const projectLabel=(id:number)=>'PRJ-'+String(id).padStart(6,'0');
 const createdDate=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Dhaka',dateStyle:'medium',timeStyle:'short'});
 
-export default function Projects({me,team,onCreated}:{me:Officer&{manager:number};team:Officer[];onCreated:()=>void}){
+export default function Projects({me,team}:{me:Officer&{manager:number};team:Officer[]}){
  const [projects,setProjects]=useState<Project[]>(),[filter,setFilter]=useState<typeof filters[number]>('All projects');
  const [updateDraft,setUpdateDraft]=useState('');
  const [formRevision,setFormRevision]=useState(0);
@@ -35,7 +36,9 @@ export default function Projects({me,team,onCreated}:{me:Officer&{manager:number
    const id=location.hash.match(/^#\/projects\/(\d+)$/)?.[1];
    if(id){const match=rows.find(row=>String(row.id)===id);if(match)showProject(match);else setError('Project no longer exists.');}
   }}).catch((e:Error)=>{if(active)setError(e.message)});
-  return ()=>{active=false};
+  const refresh=()=>void readProjects().then(rows=>{if(active)setProjects(rows)}).catch(()=>{});
+  window.addEventListener('desk-items-changed',refresh);
+  return ()=>{active=false;window.removeEventListener('desk-items-changed',refresh);};
  },[]);
  const rows=projects?.filter(p=>filter==='All projects'||p.status===filter);
  useEffect(()=>{
@@ -52,19 +55,23 @@ export default function Projects({me,team,onCreated}:{me:Officer&{manager:number
   const officer=value==='new'?'':value.assignee;
   const member=team.find(o=>o.id===officer);
   setAssignment({team:value==='new'?'':value.team??sectionFor(member?.specialty??''),officer});
-  setFormError('');setUpdateDraft('');setEditing(value);setFormRevision(n=>n+1);
+  setFormError('');setUpdateDraft('');setDeadline(value==='new'?'':value.deadline);setEditing(value);setFormRevision(n=>n+1);
  };
  const showProject=(p:Project)=>{setSelectedId(p.id);setError('');if(canEdit(p))open(p);};
  const eligible=team.filter(o=>sectionFor(o.specialty)===assignment.team);
+ const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Dhaka',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ const [deadline,setDeadline]=useState('');
  const projectForm=editing&&(<form key={formRevision} onSubmit={async e=>{
     e.preventDefault();
     if(busy)return;
+    if(deadline<today&&deadline!==project?.deadline){setFormError('Project deadline must be today or later (BDT).');return;}
     const fields=Object.fromEntries(new FormData(e.currentTarget));
     setBusy(true);setFormError('');setError('');
     try{await saveProject({...fields,id:project?.id});}
     catch(err){setFormError(err instanceof Error?err.message:'Could not save project.');setBusy(false);return;}
     setUpdateDraft('');
-    if(!project){setEditing(undefined);onCreated();}
+    showSuccess(project?'Project updated successfully':'Project submitted for Manager approval');
+    if(!project)setEditing(undefined);
     try{const updated=await readProjects();setProjects(updated);const saved=updated.find(row=>row.id===project?.id);if(saved)setEditing(saved);}
     catch(err){setError(err instanceof Error?err.message:'Could not reload projects.');}
     finally{setBusy(false);}
@@ -76,7 +83,7 @@ export default function Projects({me,team,onCreated}:{me:Officer&{manager:number
      <label>Assigned to<select name="assignee" required value={assignment.officer} onChange={e=>setAssignment({...assignment,officer:e.target.value})}><option value="">{!assignment.team?'Select a team first':eligible.length?'Select an officer':'No active officers'}</option>{project&&assignment.officer===project.assignee&&!team.some(o=>o.id===project.assignee)&&<option value={project.assignee}>{project.assignee_name}</option>}{eligible.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></label>
      <label>Priority<PrioritySelect initial={project?.priority}/></label>
     </div>
-    <label>Deadline (BDT)<input type="date" name="deadline" defaultValue={project?.deadline} required/></label>
+    <label>Deadline (BDT)<input type="date" name="deadline" value={deadline} min={project?.deadline===deadline&&deadline<today?deadline:today} onChange={e=>setDeadline(e.target.value)} required/></label>
     {project&&<label>Status<select name="status" defaultValue={project.status}>{phases.map(phase=><option key={phase}>{phase}</option>)}</select></label>}
     {!project&&<label>Description<textarea name="description" required maxLength={10000} rows={3}/></label>}
     {project&&<label>Update<textarea name="latest_update" value={updateDraft} onChange={e=>setUpdateDraft(e.target.value)} maxLength={2000} rows={3}/></label>}

@@ -1,3 +1,4 @@
+import {showSuccess} from './success-notice';
 import {useState} from 'react';
 import {writeDeleteAction} from './backend';
 
@@ -9,8 +10,8 @@ export default function DeleteItem({kind,id,manager,onDelete}:{kind:'ticket'|'pr
    setBusy(true);setMessage('');
    try{
     await writeDeleteAction({action:'delete',kind,target:String(id)});
+    showSuccess(manager?`${kind==='ticket'?'Ticket':'Project'} deleted successfully`:'Delete request submitted for Manager approval');
     if(manager)onDelete();
-    else setMessage('Delete request sent to Manager.');
    }catch(e){setMessage(e instanceof Error?e.message:'Could not process deletion.');}
    finally{setBusy(false);}
   }}>{manager?'Delete':'Request delete'} {kind}</button>

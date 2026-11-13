@@ -1,3 +1,4 @@
+import {showSuccess} from './success-notice';
 import {useEffect,useState} from 'react';
 import {readRegularWork,writeRegularWork} from './backend';
 type Task={id:string;title:string;officer:string;name:string;completed:boolean;approved:boolean;ends?:string|null};
@@ -18,7 +19,7 @@ export default function RegularWork({me,team,onChange}:{me:Member;team:Member[];
  async function save(payload:Record<string,unknown>,form?:HTMLFormElement){
   if(busy)return;
   setBusy(true);setError('');
-  try{await writeRegularWork(payload);setAction(undefined);if(form){form.reset();setRepeat(0);}await refresh();onChange()}
+  try{await writeRegularWork(payload);showSuccess(({add:'Task added successfully',complete:'Task completed successfully',approve:'Request approved successfully',reject:'Request rejected successfully',reason:'Reason submitted successfully',edit:manager?'Task updated successfully':'Edit request submitted successfully',delete:manager?'Task removed successfully':'Delete request submitted successfully',transfer:'Task transferred successfully'} as Record<string,string>)[String(payload.action)]??'Saved successfully');setAction(undefined);if(form){form.reset();setRepeat(0);}await refresh();onChange()}
   catch(e){setError(e instanceof Error?e.message:'Could not save regular work.')}
   finally{setBusy(false)}
  }

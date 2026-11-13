@@ -106,3 +106,7 @@ export const readDeleteResults=(id?:string)=>deskRpc<DeleteResult[]>('desk_delet
 
 export type ProjectApproval={id:number;subject:string;creator:string;assignee:string;deadline:string;description:string;team:string;office:string;priority:string};
 export const readProjectApprovals=(id?:number,approve?:boolean)=>deskRpc<ProjectApproval[]>('desk_project_approvals',{p_id:id??null,p_approve:approve??null});
+
+export const readProjectNotifications=(id?:number,seenAt?:string)=>deskRpc<{
+ unread:number;items:{project:number;message:string;updated_at:string;read_at:string|null}[];
+}>('desk_project_notifications',{p_project:id??null,p_seen_at:seenAt??null});

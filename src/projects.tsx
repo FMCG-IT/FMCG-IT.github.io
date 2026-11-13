@@ -21,9 +21,8 @@ type Officer={id:string;name:string;specialty:string};
 const projectLabel=(id:number)=>'PRJ-'+String(id).padStart(6,'0');
 const createdDate=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Dhaka',dateStyle:'medium',timeStyle:'short'});
 
-export default function Projects({me,team}:{me:Officer&{manager:number};team:Officer[]}){
+export default function Projects({me,team,onCreated}:{me:Officer&{manager:number};team:Officer[];onCreated:()=>void}){
  const [projects,setProjects]=useState<Project[]>(),[filter,setFilter]=useState<typeof filters[number]>('All projects');
- const [notice,setNotice]=useState('');
  const [updateDraft,setUpdateDraft]=useState('');
  const [formRevision,setFormRevision]=useState(0);
  const [selectedId,setSelectedId]=useState<number>();
@@ -61,11 +60,11 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
     e.preventDefault();
     if(busy)return;
     const fields=Object.fromEntries(new FormData(e.currentTarget));
-    setBusy(true);setFormError('');setError('');setNotice('');
+    setBusy(true);setFormError('');setError('');
     try{await saveProject({...fields,id:project?.id});}
     catch(err){setFormError(err instanceof Error?err.message:'Could not save project.');setBusy(false);return;}
     setUpdateDraft('');
-    if(!project){setEditing(undefined);setNotice('Project submitted for Manager approval.');}
+    if(!project){setEditing(undefined);onCreated();}
     try{const updated=await readProjects();setProjects(updated);const saved=updated.find(row=>row.id===project?.id);if(saved)setEditing(saved);}
     catch(err){setError(err instanceof Error?err.message:'Could not reload projects.');}
     finally{setBusy(false);}
@@ -105,7 +104,6 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
     {canEdit(selected)&&project?.id===selected.id&&<section className="panel"><h3>Manage project</h3>{projectForm}<DeleteItem key={selected.id} kind="project" id={selected.id} manager={me.manager===1} onDelete={()=>{setProjects(previous=>previous?.filter(p=>p.id!==selected.id));setEditing(undefined);setSelectedId(undefined)}}/>{error&&<p className="error" role="alert">{error}</p>}</section>}
    </div>
   </div>:<>
-  {notice&&<p role="status">{notice}</p>}
   <div className="project-filters" aria-label="Filter projects">{filters.map((value,index)=><button key={value} className={filter===value?'primary':'secondary'} aria-pressed={filter===value} onClick={()=>setFilter(value)}>{labels[index]}</button>)}</div>
   {error&&<p className="error" role="alert">{error}</p>}
   <section className="ticket-section project-table"><div className="table-scroll ticket-fit-region" tabIndex={0} role="region" aria-label="Projects"><table>

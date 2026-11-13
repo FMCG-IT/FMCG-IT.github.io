@@ -1,3 +1,4 @@
+import {readProjectNotifications} from './backend';
 import {useEffect,useState,useRef} from 'react';
 import {readNotifications,writeDesk,readDeleteRequests,writeDeleteAction,readDeleteResults,type DeleteResult,type DeleteRequest,readProjectApprovals,type ProjectApproval} from './backend';
 export const overdueDays=(priority:string)=>({Low:30,Medium:10,High:3,Critical:1,Urgent:1}[priority]??10);
@@ -8,6 +9,7 @@ export function Notifications({openTicket,workApprovals=0}:{openTicket:(id:strin
  const container=useRef<HTMLDivElement>(null);
 
  const [data,setData]=useState<Awaited<ReturnType<typeof readNotifications>>>({unread:0,items:[]}),[error,setError]=useState(''),[open,setOpen]=useState(false);
+ const [projectInbox,setProjectInbox]=useState<Awaited<ReturnType<typeof readProjectNotifications>>>({unread:0,items:[]});
  const [deletions,setDeletions]=useState<DeleteRequest[]>([]);
  const [results,setResults]=useState<DeleteResult[]>([]);
  const [projectRequests,setProjectRequests]=useState<ProjectApproval[]>([]);
@@ -15,6 +17,7 @@ export function Notifications({openTicket,workApprovals=0}:{openTicket:(id:strin
  useEffect(()=>{
   let active=true;
   const refresh=()=>{
+   void readProjectNotifications().then(rows=>{if(active)setProjectInbox(rows)}).catch(()=>{});
    void readDeleteRequests().then(rows=>{if(active)setDeletions(rows)}).catch(()=>{});
    void readProjectApprovals().then(rows=>{if(active)setProjectRequests(rows)}).catch(()=>{});
    void readDeleteResults().then(rows=>{if(active)setResults(rows)}).catch(()=>{});
@@ -38,7 +41,7 @@ export function Notifications({openTicket,workApprovals=0}:{openTicket:(id:strin
   catch(e){setError(e instanceof Error?e.message:'Could not review project.');}
   finally{setReviewing(false);}
  }
- const total=data.unread+workApprovals+deletions.length+results.length+projectRequests.length;
+ const total=projectInbox.unread+data.unread+workApprovals+deletions.length+results.length+projectRequests.length;
  useEffect(()=>{let active=true;const refresh=()=>{if(document.visibilityState==='hidden')return;void readNotifications().then(r=>{if(active){setData(r);setError('')}}).catch((e:Error)=>{if(active)setError(e.message)});};refresh();const timer=setInterval(refresh,30000);document.addEventListener('visibilitychange',refresh);return()=>{active=false;clearInterval(timer);document.removeEventListener('visibilitychange',refresh)}},[]);
  useEffect(()=>{
   if(!open)return;
@@ -64,7 +67,12 @@ export function Notifications({openTicket,workApprovals=0}:{openTicket:(id:strin
  setOpen(false);
  if(location.hash==='#/regular-work/approvals')document.getElementById('work-approvals')?.scrollIntoView({block:'start'});
  else location.hash='/regular-work/approvals';
- }}>{workApprovals} regular work approval {workApprovals===1?'request':'requests'}</button>}<small>Latest 30 ticket conversations · refreshes every 30 seconds</small>{error&&<p className="error" role="alert">{error}</p>}{!data.items.length&&!error&&!workApprovals&&!deletions.length&&!results.length&&!projectRequests.length&&<p>No notifications yet.</p>}{data.items.map(item=><button key={item.ticket} className={'notification-item'+(!item.read_at?' unread':'')} onClick={()=>void select(item)}>{item.message}<small>{new Date(item.updated_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} BDT</small></button>)}</section>}</div>;
+ }}>{workApprovals} regular work approval {workApprovals===1?'request':'requests'}</button>}<small>Recent ticket and project activity · refreshes every 30 seconds</small>{error&&<p className="error" role="alert">{error}</p>}{!data.items.length&&!projectInbox.items.length&&!error&&!workApprovals&&!deletions.length&&!results.length&&!projectRequests.length&&<p>No notifications yet.</p>}{projectInbox.items.map(item=><button key={item.project} type="button" className={'notification-item'+(!item.read_at?' unread':'')} onClick={async()=>{
+  setOpen(false);
+  try{setProjectInbox(await readProjectNotifications(item.project,item.updated_at));}
+  catch(e){setError(e instanceof Error?e.message:'Could not mark as read');}
+  location.hash='/projects/'+item.project;
+ }}>{item.message}<small>{new Date(item.updated_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} BDT</small></button>)}{data.items.map(item=><button key={item.ticket} className={'notification-item'+(!item.read_at?' unread':'')} onClick={()=>void select(item)}>{item.message}<small>{new Date(item.updated_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} BDT</small></button>)}</section>}</div>;
 }
 export function ManagerTransfer({team,onDone}:{team:any[];onDone:()=>Promise<void>}){
  const [target,setTarget]=useState(''),[confirmation,setConfirmation]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[open,setOpen]=useState(false);

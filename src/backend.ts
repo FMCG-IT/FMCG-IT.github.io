@@ -97,6 +97,9 @@ export const readProjectCount=()=>deskRpc<number>('desk_projects',{p_count_only:
 export const readProjects=()=>deskRpc<import('./projects').Project[]>('desk_projects');
 export const saveProject=(p:Record<string,unknown>)=>deskRpc<void>('desk_save_project',{p});
 
-export type DeleteRequest={id:string;kind:'ticket'|'project';subject:string;name:string};
+export type DeleteRequest={id:string;kind:'ticket'|'project';subject:string;name:string;target:string};
 export const readDeleteRequests=()=>deskRpc<DeleteRequest[]>('desk_delete_requests');
 export const writeDeleteAction=(p:Record<string,unknown>)=>deskRpc<void>('desk_delete_action',{p});
+
+export type DeleteResult=Pick<DeleteRequest,'id'|'kind'|'subject'>&{status:'Approved'|'Rejected'};
+export const readDeleteResults=(id?:string)=>deskRpc<DeleteResult[]>('desk_delete_results',{p_read:id??null});

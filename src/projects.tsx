@@ -28,7 +28,11 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
  const [editing,setEditing]=useState<Project|'new'>(),[error,setError]=useState(''),[formError,setFormError]=useState(''),[busy,setBusy]=useState(false);
  useEffect(()=>{
   let active=true;
-  void readProjects().then(rows=>{if(active)setProjects(rows)}).catch((e:Error)=>{if(active)setError(e.message)});
+  void readProjects().then(rows=>{if(active){
+   setProjects(rows);
+   const id=location.hash.match(/^#\/projects\/(\d+)$/)?.[1];
+   if(id){const match=rows.find(row=>String(row.id)===id);if(match)showProject(match);else setError('Project no longer exists.');}
+  }}).catch((e:Error)=>{if(active)setError(e.message)});
   return ()=>{active=false};
  },[]);
  const rows=projects?.filter(p=>filter==='All projects'||p.status===filter);
@@ -45,12 +49,13 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
  const eligible=team.filter(o=>sectionFor(o.specialty)===assignment.team);
  const projectForm=editing&&(<form key={formRevision} onSubmit={async e=>{
     e.preventDefault();
+    if(busy)return;
     const fields=Object.fromEntries(new FormData(e.currentTarget));
     setBusy(true);setFormError('');setError('');
     try{await saveProject({...fields,id:project?.id});}
     catch(err){setFormError(err instanceof Error?err.message:'Could not save project.');setBusy(false);return;}
     if(!project)setEditing(undefined);
-    try{const updated=await readProjects();setProjects(updated);const saved=updated.find(row=>row.id===project?.id);if(saved)open(saved);}
+    try{const updated=await readProjects();setProjects(updated);const saved=updated.find(row=>row.id===project?.id);if(saved)setEditing(saved);}
     catch(err){setError(err instanceof Error?err.message:'Could not reload projects.');}
     finally{setBusy(false);}
    }}>
@@ -83,7 +88,7 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
      </div>
      <h3>Latest update</h3><p className="description">{selected.latest_update||'No updates yet.'}</p>
     </section>
-    {canEdit(selected)&&<section className="panel"><h3>Manage project</h3>{projectForm}<DeleteItem key={selected.id} kind="project" id={selected.id} manager={me.manager===1} onDelete={()=>{setProjects(previous=>previous?.filter(p=>p.id!==selected.id));setEditing(undefined);setSelectedId(undefined)}}/>{error&&<p className="error" role="alert">{error}</p>}</section>}
+    {canEdit(selected)&&project?.id===selected.id&&<section className="panel"><h3>Manage project</h3>{projectForm}<DeleteItem key={selected.id} kind="project" id={selected.id} manager={me.manager===1} onDelete={()=>{setProjects(previous=>previous?.filter(p=>p.id!==selected.id));setEditing(undefined);setSelectedId(undefined)}}/>{error&&<p className="error" role="alert">{error}</p>}</section>}
    </div>
   </div>:<>
   <div className="project-filters" aria-label="Filter projects">{filters.map((value,index)=><button key={value} className={filter===value?'primary':'secondary'} aria-pressed={filter===value} onClick={()=>setFilter(value)}>{labels[index]}</button>)}</div>
@@ -98,7 +103,7 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
     {filter==='All projects'&&<td>{p.status}</td>}
    </tr>):<tr><td colSpan={filter==='All projects'?8:7}>{error?'Projects could not be loaded.':projects?'No projects in this view.':'Loading projects…'}</td></tr>}</tbody>
   </table></div></section></>}
-  {editing==='new'&&<div className="overlay"><section className="dialog" role="dialog" aria-modal="true" aria-labelledby="project-form-title">
+  {!selected&&editing==='new'&&<div className="overlay"><section className="dialog" role="dialog" aria-modal="true" aria-labelledby="project-form-title">
    <h2 id="project-form-title">Add project</h2>
    {projectForm}
   </section></div>}

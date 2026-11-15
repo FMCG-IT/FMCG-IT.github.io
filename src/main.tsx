@@ -36,7 +36,7 @@ function Auth({mode,setMode}:{mode:Mode;setMode:(m:Mode)=>void}){
   finally{setBusy(false);}
  }
  const label={login:'Sign in',forgot:'Request password reset',reset:'Save new password'}[mode];
- return <main className="setup"><div className="logo"><Monitor size={20}/></div><a href="#/">IT Desk home</a><p className="eyebrow">IT STAFF</p><h1>{label}</h1>
+ return <main className="setup"><a className="auth-home-link" href="#/home" onClick={()=>setMode('login')}><span className="logo" aria-hidden="true"><Monitor size={20}/></span><span>IT Desk home</span></a><p className="eyebrow">IT STAFF</p><h1>{label}</h1>
  <form onSubmit={submit}>
  {mode!=='reset'&&<label>Email<input type="email" name="email" required autoComplete="email"/></label>}
  {mode!=='forgot'&&<label>Password<input type="password" name="password" required minLength={mode==='login'?undefined:8} autoComplete={mode==='login'?'current-password':'new-password'}/></label>}
@@ -101,6 +101,7 @@ function App(){
   return ()=>{window.removeEventListener('hashchange',handleRoute);subscription.unsubscribe();};
  },[]);
  if(!supabase)return <main className="setup"><h1>Set up IT Desk</h1><p>Configure the Supabase URL and publishable key, then rebuild.</p></main>;
+ if(route==='/home')return <SupportHome/>;
  if(route==='/my-requests')return <GuestTickets key={route} list/>;
  if(route==='/submit-ticket')return <GuestTickets key={route}/>;
  const trackingKey=route.match(/^\/request\/([0-9a-f-]{36})$/i)?.[1];

@@ -43,7 +43,7 @@ export default function GuestTickets({token,list=false}:{token?:string;list?:boo
     <label>Team<select name="team" required defaultValue=""><option value="">Select team</option>{sections.map(team=><option key={team} value={team}>{teamLabel(team)}</option>)}</select></label>
     <label>Office / area<select name="office" required defaultValue=""><option value="">Select office / area</option>{offices.map(office=><option key={office}>{office}</option>)}</select></label>
     </div>
-    <button className="primary" disabled={busy}>Submit ticket</button>
+    <div className="form-submit-bar"><button className="primary" disabled={busy}>Submit ticket</button></div>
    </form>}
    {error&&<p className="error" role="alert">{error}</p>}
   </section>

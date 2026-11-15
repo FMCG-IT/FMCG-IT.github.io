@@ -116,7 +116,7 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
     <label>Deadline (BDT)<input type="date" name="deadline" value={deadline} min={project?.deadline===deadline&&deadline<today?deadline:today} onChange={e=>setDeadline(e.target.value)} required/></label>
     {project&&<label>Status<select name="status" defaultValue={project.status}>{phases.map(phase=><option key={phase}>{phase}</option>)}</select></label>}
     {!project&&<label>Description<textarea name="description" required maxLength={10000} rows={3}/></label>}
-    {project&&<label>Update<textarea name="latest_update" value={updateDraft} onChange={e=>setUpdateDraft(e.target.value)} maxLength={2000} rows={3}/></label>}
+    {project&&<label>Update<textarea name="latest_update" required value={updateDraft} onChange={e=>setUpdateDraft(e.target.value)} maxLength={2000} rows={3}/></label>}
     {formError&&<p className="error" role="alert">{formError}</p>}
     <div className="work-actions"><button className="primary" disabled={busy}>Save project</button><button type="button" className="secondary" disabled={busy} onClick={()=>project?open(project):setEditing(undefined)}>{project?'Reset':'Cancel'}</button></div>
    </form>);

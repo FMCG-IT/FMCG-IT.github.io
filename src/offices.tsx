@@ -13,5 +13,13 @@ export function useOffices(){
 }
 export function OfficeFields({selected=[]}:{selected?:string[]}){
  const offices=useOffices();
- return <fieldset className="office-fields"><legend>Responsible offices / areas — select one or more</legend>{offices.map(office=><label className="checkbox" key={office}><input type="checkbox" name="offices" value={office} defaultChecked={selected.includes(office)}/>{office}</label>)}</fieldset>;
+ return <fieldset className="office-fields">
+  <legend id="office-fields-label">Responsible offices / areas — select one or more</legend>
+  <div className="office-options" tabIndex={0} onChange={e=>{if(e.currentTarget.querySelector('input:checked'))e.currentTarget.classList.remove('office-options-invalid');}} role="region" aria-labelledby="office-fields-label">
+   {offices.map(office=><label className="checkbox" key={office} title={office}>
+    <input type="checkbox" name="offices" value={office} defaultChecked={selected.includes(office)}/>
+    <span>{office}</span>
+   </label>)}
+  </div>
+ </fieldset>;
 }

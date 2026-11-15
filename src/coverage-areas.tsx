@@ -31,7 +31,7 @@ export default function CoverageAreas({team,onClose,onChange}:{team:{id:string;n
    finally{setBusy(false);}
   }}>
    <label>Area name<input name="name" required maxLength={100} defaultValue={editing}/></label>
-   <button className="primary" disabled={busy}>{editing?'Save area':'Add area'}</button>{editing&&<button type="button" className="secondary" disabled={busy} onClick={()=>setEditing(undefined)}>Cancel</button>}
+   <div className="form-submit-bar"><button className="primary" disabled={busy}>{editing?'Save area':'Add area'}</button>{editing&&<button type="button" className="secondary" disabled={busy} onClick={()=>setEditing(undefined)}>Cancel</button>}</div>
   </form>
   {error&&<p className="error" role="alert">{error}</p>}
   <div className="table-scroll"><table><thead><tr><th scope="col">Area</th><th scope="col">Assigned to</th><th scope="col">Actions</th></tr></thead><tbody>

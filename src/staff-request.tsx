@@ -38,7 +38,7 @@ export default function StaffRequest({id,kind}:{id:string;kind:'ticket'|'passwor
    }}>
     {ticket?<label>Assign to<select name="assignee" required defaultValue=""><option value="">{ticket.officers.length?'Select officer':'No officer covers this team and office'}</option>{ticket.officers.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></label>:
     <label>New password<input name="password" type="password" autoComplete="new-password" minLength={8} maxLength={72} required/></label>}
-    <button className="primary" disabled={busy||!!ticket&&!ticket.officers.length}>{ticket?'Assign ticket':'Set new password'}</button>
+    <div className="form-submit-bar"><button className="primary" disabled={busy||!!ticket&&!ticket.officers.length}>{ticket?'Assign ticket':'Set new password'}</button></div>
    </form>}
    {error&&<p className="error" role="alert">{error}</p>}
   </section>

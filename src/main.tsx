@@ -40,7 +40,7 @@ function Auth({mode,setMode}:{mode:Mode;setMode:(m:Mode)=>void}){
  <form onSubmit={submit}>
  {mode!=='reset'&&<label>Email<input type="email" name="email" required autoComplete="email"/></label>}
  {mode!=='forgot'&&<label>Password<input type="password" name="password" required minLength={mode==='login'?undefined:8} autoComplete={mode==='login'?'current-password':'new-password'}/></label>}
- <button className="primary" disabled={busy}>{busy?'Please wait…':label}</button>
+ <div className="form-submit-bar"><button className="primary" disabled={busy}>{busy?'Please wait…':label}</button></div>
  </form>
  {message&&<p role="status">{message}</p>}
  {mode==='login'?<div className="auth-actions"><button className="text-button" onClick={()=>{setMessage('');setMode('forgot')}}>Forgot password?</button></div>:<button className="text-button" onClick={()=>{setMessage('');setMode('login')}}>Back to sign in</button>}

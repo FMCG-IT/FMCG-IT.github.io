@@ -118,3 +118,10 @@ export type ProjectReminder={project:number;kind:'progress'|'due_member'|'due_ma
 export const readProjectReminders=(item?:ProjectReminder)=>deskRpc<ProjectReminder[]>('desk_project_reminders',{
  p_project:item?.project??null,p_kind:item?.kind??null,p_day:item?.day??null,
 });
+
+export async function changeOwnPassword(password:string){
+ if(!supabase)throw Error('Supabase is not configured.');
+ if(password.length<8||new TextEncoder().encode(password).length>72)throw Error('Use at least 8 characters and no more than 72 bytes.');
+ const {error}=await supabase.auth.updateUser({password});
+ if(error)throw Error(error.message);
+}

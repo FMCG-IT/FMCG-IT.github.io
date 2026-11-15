@@ -100,8 +100,8 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
     setUpdateDraft('');
     if(project)setHistoryRevision(value=>value+1);
     showSuccess(project?'Project updated successfully':'Project submitted for Manager approval');
-    if(!project)setEditing(undefined);
-    try{const updated=await readProjects();setProjects(updated);const saved=updated.find(row=>row.id===project?.id);if(saved)setEditing(saved);}
+    setEditing(undefined);
+    try{setProjects(await readProjects());}
     catch(err){setError(err instanceof Error?err.message:'Could not reload projects.');}
     finally{setBusy(false);}
    }}>

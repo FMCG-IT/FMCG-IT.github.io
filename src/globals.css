@@ -481,3 +481,9 @@ form.validation-attempted :is(input,select,textarea):required:invalid{
  background:#fff2f3;border-color:#e7a4ae;scroll-margin:12px 0 64px;
 }
 .office-options-invalid{background:#fff2f3;outline:1px solid #e7a4ae}
+
+.guest-ticket-heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.guest-follow-up-link{color:#075bb5;text-decoration:underline;overflow-wrap:anywhere}
+.notifications:has(.work-follow-up){display:flex;gap:8px;align-items:center}
+.notifications .work-follow-up{background:#176437;border-color:#176437;color:#fff}
+.notifications .work-follow-up.work-follow-up-urgent{background:#b91c32;border-color:#a1182b;color:#fff}

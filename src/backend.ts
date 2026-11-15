@@ -148,3 +148,5 @@ export const readCoverageAreas=()=>deskRpc<string[]>('desk_coverage_areas');
 export const addCoverageArea=(name:string)=>deskRpc<void>('desk_add_coverage_area',{p_name:name});
 
 export const manageCoverageArea=(oldName:string,newName:string|null)=>deskRpc<void>('desk_manage_coverage_area',{p_old:oldName,p_new:newName});
+
+export const workFollowUp=(send=false,day?:string)=>deskRpc<{canSend:boolean;urgent:boolean;sent:number;items:{day:string;sender:string}[]}>('desk_work_follow_up',{p_send:send,p_read:day??null});

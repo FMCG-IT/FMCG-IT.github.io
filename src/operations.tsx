@@ -1,3 +1,4 @@
+import {workFollowUp} from './backend';
 import {intakeQueue,type IntakeTicket,readPasswordRequests} from './backend';
 import {showSuccess} from './success-notice';
 import {readProjectNotifications,readProjectReminders,type ProjectReminder} from './backend';
@@ -60,7 +61,15 @@ export function Notifications({openTicket,workApprovals=0,onItemsChanged}:{openT
   refresh();const timer=setInterval(refresh,30000);
   return ()=>{active=false;clearInterval(timer);};
  },[]);
- const total=passwordRequests.length+intake.length+reminders.length+projectInbox.unread+data.unread+workApprovals+deletions.length+results.length+projectRequests.length;
+ const [followUp,setFollowUp]=useState<Awaited<ReturnType<typeof workFollowUp>>>();
+ const [sendingFollowUp,setSendingFollowUp]=useState(false);
+ useEffect(()=>{
+  let active=true;
+  const refresh=()=>void workFollowUp().then(result=>{if(active)setFollowUp(result);}).catch(()=>{});
+  refresh();const timer=setInterval(refresh,30000);
+  return ()=>{active=false;clearInterval(timer);};
+ },[]);
+ const total=(followUp?.items.length??0)+passwordRequests.length+intake.length+reminders.length+projectInbox.unread+data.unread+workApprovals+deletions.length+results.length+projectRequests.length;
  useEffect(()=>{let active=true;const refresh=()=>{if(document.visibilityState==='hidden')return;void readNotifications().then(r=>{if(active){setData(r);setError('')}}).catch((e:Error)=>{if(active)setError(e.message)});};refresh();const timer=setInterval(refresh,30000);document.addEventListener('visibilitychange',refresh);return()=>{active=false;clearInterval(timer);document.removeEventListener('visibilitychange',refresh)}},[]);
  useEffect(()=>{
   if(!open)return;
@@ -78,7 +87,18 @@ export function Notifications({openTicket,workApprovals=0,onItemsChanged}:{openT
  }}>{item.message}<small>{new Date(item.updated_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} BDT</small></button>})),
   ...data.items.map(item=>({item,element:<button key={'ticket-'+item.ticket} className={'notification-item'+(!item.read_at?' unread':'')} onClick={()=>void select(item)}>{item.message}<small>{new Date(item.updated_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} BDT</small></button>})),
  ].sort((a,b)=>Number(!!a.item.read_at)-Number(!!b.item.read_at)||Date.parse(b.item.updated_at)-Date.parse(a.item.updated_at));
- return <div ref={container} className="notifications"><button className="secondary" aria-expanded={open} onClick={()=>setOpen(!open)}>Notifications {total>0&&<b className="notification-count">({total})</b>}</button>{open&&<section className="panel notification-list"><h3>Notifications</h3>{intake.map(ticket=><a className="notification-item unread" key={'intake-'+ticket.id} href={'#/intake/'+ticket.id} onClick={()=>setOpen(false)}>New ticket · {ticket.subject}</a>)}
+ return <div ref={container} className="notifications">{followUp?.canSend&&<button type="button" className={'secondary work-follow-up'+(followUp.urgent?' work-follow-up-urgent':'')} disabled={sendingFollowUp} onClick={async()=>{
+  setSendingFollowUp(true);setError('');
+  try{
+   const result=await workFollowUp(true);setFollowUp(result);
+   if(result.sent)showSuccess('Follow-up sent to '+result.sent+' member(s)');
+   else {setError('No new overdue reminders to send today.');setOpen(true);}
+  }catch(e){setError(e instanceof Error?e.message:'Could not send follow-up.');setOpen(true);}
+  finally{setSendingFollowUp(false);}
+ }}>Follow up</button>}<button className="secondary" aria-expanded={open} onClick={()=>setOpen(!open)}>Notifications {total>0&&<b className="notification-count">({total})</b>}</button>{open&&<section className="panel notification-list"><h3>Notifications</h3>{followUp?.items.map(item=><button key={'follow-up-'+item.day} type="button" className="notification-item unread" onClick={async()=>{
+  try{setFollowUp(await workFollowUp(false,item.day));location.hash='/regular-work';setOpen(false);}
+  catch(e){setError(e instanceof Error?e.message:'Could not open follow-up.');}
+ }}>Please finish your overdue task<small>{item.sender} · {item.day}</small></button>)}{intake.map(ticket=><a className="notification-item unread" key={'intake-'+ticket.id} href={'#/intake/'+ticket.id} onClick={()=>setOpen(false)}>New ticket · {ticket.subject}</a>)}
  {passwordRequests.map(member=><a className="notification-item unread" key={'reset-'+member.id} href={'#/password-request/'+member.id} onClick={()=>setOpen(false)}>Password reset request · {member.name}</a>)}{projectRequests.map(project=><article className="notification-item unread" key={project.id}>
  <details><summary>New project approval · {project.subject}</summary>
  <small>{project.creator} · Assigned to {project.assignee}</small>
@@ -96,7 +116,7 @@ export function Notifications({openTicket,workApprovals=0,onItemsChanged}:{openT
  setOpen(false);
  if(location.hash==='#/regular-work/approvals')document.getElementById('work-approvals')?.scrollIntoView({block:'start'});
  else location.hash='/regular-work/approvals';
- }}>{workApprovals} regular work approval {workApprovals===1?'request':'requests'}</button>}<small>Recent ticket and project activity · refreshes every 30 seconds</small>{error&&<p className="error" role="alert">{error}</p>}{!data.items.length&&!projectInbox.items.length&&!reminders.length&&!error&&!workApprovals&&!deletions.length&&!results.length&&!projectRequests.length&&!intake.length&&!passwordRequests.length&&<p>No notifications yet.</p>}{reminders.map(item=><button type="button" key={item.project+'-'+item.kind+'-'+item.day} className={'notification-item unread'+(item.kind==='progress'?'':' project-reminder-urgent')} onClick={async()=>{
+ }}>{workApprovals} regular work approval {workApprovals===1?'request':'requests'}</button>}<small>Recent ticket and project activity · refreshes every 30 seconds</small>{error&&<p className="error" role="alert">{error}</p>}{!data.items.length&&!projectInbox.items.length&&!reminders.length&&!error&&!workApprovals&&!deletions.length&&!results.length&&!projectRequests.length&&!intake.length&&!passwordRequests.length&&!followUp?.items.length&&<p>No notifications yet.</p>}{reminders.map(item=><button type="button" key={item.project+'-'+item.kind+'-'+item.day} className={'notification-item unread'+(item.kind==='progress'?'':' project-reminder-urgent')} onClick={async()=>{
   try{setReminders(await readProjectReminders(item));setOpen(false);location.hash='/projects/'+item.project;}
   catch(e){setError(e instanceof Error?e.message:'Could not open reminder');}
  }}>{item.message}<small>Deadline {item.deadline} (BDT)</small></button>)}{activity.map(entry=>entry.element)}</section>}</div>;

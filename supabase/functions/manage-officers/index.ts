@@ -40,6 +40,8 @@ export function createHandler(env:Environment,clientFactory=createClient){
    const name=typeof values.name==='string'?values.name.trim():'';
    const password=typeof values.password==='string'?values.password:'';
    const specialty=values.specialty;
+   const departmentRole=values.department_role??'member';
+   if(departmentRole!=='member'&&departmentRole!=='manager')return reply(400,{error:'Select a department role'});
    const designation=values.designation??'Officer';
    const offices=values.offices;
    const allowedOffices=['FMCG','Rangpur Area Office','Khulna Area Office','Kushtia Area Office','Mymensingh Area Office','Mymensing Pharma','32 Bigha Project'];
@@ -61,7 +63,7 @@ export function createHandler(env:Environment,clientFactory=createClient){
     if(createError||!created.user)return reply(400,{error:createError?.message??'Could not create the account'});
     accountId=created.user.id;
    }
-   const {error:saveError}=await admin.rpc('desk_register_officer_with_offices',{p_actor:identity.user.id,p_account:accountId,p_name:name,p_section:specialty,p_designation:designation,p_offices:[...new Set(offices)]});
+   const {error:saveError}=await admin.rpc('desk_register_officer_with_role',{p_actor:identity.user.id,p_account:accountId,p_name:name,p_section:specialty,p_designation:designation,p_offices:[...new Set(offices)],p_role:departmentRole});
    if(saveError){
     if(archivedAccount)return reply(500,{error:'Login password was updated, but team access could not be restored. Ask the project administrator to check the account.'});
     const {error:rollbackError}=await admin.auth.admin.deleteUser(accountId);

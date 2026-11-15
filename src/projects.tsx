@@ -144,7 +144,13 @@ export default function Projects({me,team}:{me:Officer&{manager:number};team:Off
     {canEdit(selected)&&project?.id===selected.id&&<section className="panel"><h3>Manage project</h3>{projectForm}<DeleteItem key={selected.id} kind="project" id={selected.id} manager={me.manager===1} onDelete={()=>{setProjects(previous=>previous?.filter(p=>p.id!==selected.id));setEditing(undefined);setSelectedId(undefined)}}/>{error&&<p className="error" role="alert">{error}</p>}</section>}
    </div>
   </div>:<>
-  <div className="project-filters" aria-label="Filter projects">{filters.map((value,index)=><button key={value} className={filter===value?'primary':'secondary'} aria-pressed={filter===value} onClick={()=>setFilter(value)}>{labels[index]} <span className="project-filter-count">{projects?.filter(project=>matchesFilter(project,value)).length??'—'}</span></button>)}</div>
+  <div className="project-filters" aria-label="Filter projects">{filters.map((value,index)=>{
+   const matching=projects?.filter(project=>matchesFilter(project,value));
+   const overdue=matching?.some(isOverdue);
+   return <button key={value} className={(filter===value?'primary':'secondary')+(overdue?' project-filter-overdue':'')} aria-pressed={filter===value} onClick={()=>setFilter(value)}>
+    {labels[index]} <span className="project-filter-count">{matching?.length??'—'}</span>{overdue&&<span className="sr-only"> — contains overdue projects</span>}
+   </button>;
+  })}</div>
   {error&&<p className="error" role="alert">{error}</p>}
   <section className="ticket-section project-table"><div className="table-scroll ticket-fit-region" tabIndex={0} role="region" aria-label="Projects"><table>
    <thead><tr>{columns.map(([column,label])=><th key={column} scope="col" aria-sort={key===column?(descending?'descending':'ascending'):undefined}>

@@ -402,3 +402,7 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
 
 .notification-list .notification-item.unread,
 .notification-list .notification-item.unread :is(a,b,summary,small,p){color:#111;font-weight:750}
+
+.project-filters button.project-filter-overdue{background:#b91c32;color:#fff;border-color:#a1182b}
+.project-filters button.project-filter-overdue:hover{background:#9f172b}
+.project-filters .project-filter-overdue .project-filter-count{background:#ffffff30;color:#fff}

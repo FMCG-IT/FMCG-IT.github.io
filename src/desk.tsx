@@ -183,7 +183,7 @@ const sectionContent=section?<><div className="heading section-heading">
  <a className="text-button" href={teamPage?'#/team':'#/overview'}><ArrowLeft size={15}/> All IT sections</a>
  </div>
  {error&&<p role="alert" className="error">{error}</p>}
- {detailView??<>{memberCards}{sectionOfficers.length===0&&<p className="muted section-empty">No officers in this section yet.</p>}{!teamPage&&ticketTable}</>}
+ {detailView??(teamPage?<>{memberCards}{sectionOfficers.length===0&&<p className="muted section-empty">No officers in this section yet.</p>}</>:ticketTable)}
 </>:null;
 const activeView=section?(teamPage?'IT team':'Overview'):view;
 const freezeTicketList=!selected&&(section?!teamPage:view==='Overview'||view==='All tickets'||view==='My portal');

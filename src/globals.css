@@ -410,3 +410,12 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
 .employee-portal{max-width:900px;margin:auto;display:grid;gap:16px;padding-bottom:20px}
 .employee-portal summary,.notification-list details>summary{cursor:pointer}
 .employee-portal .event p,.notification-list details>p{white-space:pre-wrap;overflow-wrap:anywhere}
+.support-home{min-height:100dvh;background:#eef4f8;color:#111f37}
+.support-home header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px clamp(18px,6vw,100px);background:#fff}
+.support-home header strong{font-size:22px}
+.support-hero{min-height:calc(100dvh - 75px);display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:clamp(24px,8vw,130px);background:#10253d;color:#fff}
+.support-hero h1{font-size:clamp(44px,8vw,96px);margin:0 0 14px;letter-spacing:-.04em}
+.support-hero p{font-size:clamp(16px,2vw,22px);line-height:1.5;max-width:490px;margin:0 0 24px}
+.support-actions{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.support-actions a,.support-home header a{text-decoration:none}
+.support-hero{background-image:linear-gradient(90deg,#091b31ea 0%,#091b31ad 45%,#091b3125 100%),url('./assets/support-hero.webp');background-size:cover;background-position:center}

@@ -25,6 +25,8 @@ const [success,setSuccess]=useState<{message:string;key:number}>();
 useEffect(()=>{
  const receive=(event:Event)=>setSuccess(previous=>({message:(event as CustomEvent<string>).detail,key:(previous?.key??0)+1}));
  window.addEventListener('desk-success',receive);
+ const nextNotice=sessionStorage.getItem('desk-next-notice');
+ if(nextNotice){sessionStorage.removeItem('desk-next-notice');showSuccess(nextNotice);}
  return ()=>window.removeEventListener('desk-success',receive);
 },[]);
 useEffect(()=>{

@@ -141,3 +141,5 @@ export type EmployeeTicket={id:number;subject:string;description:string;team:str
 export const employeeTickets=(p?:Record<string,unknown>)=>deskRpc<EmployeeTicket[]>('desk_employee_tickets',{p:p??null});
 export type IntakeTicket={id:number;subject:string;description:string;employee:string;email:string;team:string;office:string;officers:{id:string;name:string}[]};
 export const intakeQueue=(id?:number,officer?:string)=>deskRpc<IntakeTicket[]>('desk_intake_queue',{p_id:id??null,p_assignee:officer??null});
+
+export const readPasswordRequests=()=>deskRpc<{id:string;name:string}[]>('desk_password_requests');

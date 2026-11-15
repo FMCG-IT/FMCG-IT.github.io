@@ -19,8 +19,6 @@ export function createHandler(env:Environment,clientFactory=createClient){
    const caller=clientFactory(env.SUPABASE_URL,publicKey,{global:{headers:{Authorization:authorization}},auth:{persistSession:false,autoRefreshToken:false}});
    const {data:identity,error:identityError}=await caller.auth.getUser(authorization.slice(7));
    if(identityError||!identity.user)return reply(401,{error:'Please sign in again'});
-   const {data:allowed,error:permissionError}=await caller.rpc('desk_can_manage_accounts');
-   if(permissionError||allowed!==true)return reply(403,{error:'Only an IT Manager can manage accounts'});
    let values:Record<string,unknown>;
    try{values=await request.json()}catch{return reply(400,{error:'Invalid request'})}
    if(values?.action==='reset_password'){
@@ -34,8 +32,11 @@ export function createHandler(env:Environment,clientFactory=createClient){
     if(!account)return reply(404,{error:'No active member login found'});
     const {error}=await admin.auth.admin.updateUserById(account,{password});
     if(error)return reply(400,{error:'Could not reset the password. Check the project password requirements.'});
-    return reply(200,{updated:true});
+    const {error:clearError}=await admin.rpc('desk_clear_password_request',{p_officer:officer});
+    return reply(200,{updated:true,requestCleared:!clearError});
    }
+   const {data:allowed,error:permissionError}=await caller.rpc('desk_can_manage_accounts');
+   if(permissionError||allowed!==true)return reply(403,{error:'Only an IT Manager can manage accounts'});
    const email=typeof values.email==='string'?values.email.trim().toLowerCase():'';
    const name=typeof values.name==='string'?values.name.trim():'';
    const password=typeof values.password==='string'?values.password:'';

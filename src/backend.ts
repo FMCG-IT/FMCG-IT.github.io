@@ -143,3 +143,6 @@ export type IntakeTicket={id:number;subject:string;description:string;employee:s
 export const intakeQueue=(id?:number,officer?:string)=>deskRpc<IntakeTicket[]>('desk_intake_queue',{p_id:id??null,p_assignee:officer??null});
 
 export const readPasswordRequests=()=>deskRpc<{id:string;name:string}[]>('desk_password_requests');
+
+export const readCoverageAreas=()=>deskRpc<string[]>('desk_coverage_areas');
+export const addCoverageArea=(name:string)=>deskRpc<void>('desk_add_coverage_area',{p_name:name});

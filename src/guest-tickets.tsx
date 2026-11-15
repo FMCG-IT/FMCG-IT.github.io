@@ -1,6 +1,6 @@
 import {useEffect,useState} from 'react';
 import {supabase,appUrl} from './backend';
-import {offices} from './offices';
+import {useOffices} from './offices';
 import {sections} from './it-sections';
 import {teamLabel} from './team-assignment';
 
@@ -11,6 +11,7 @@ function savedTickets():SavedTicket[]{
  catch{return [];}
 }
 export default function GuestTickets({token,list=false}:{token?:string;list?:boolean}){
+ const offices=useOffices();
  const [key,setKey]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  const [ticket,setTicket]=useState<{subject:string;status:string;updates:{id:string;body:string}[]}|null>();
  useEffect(()=>{

@@ -1,7 +1,7 @@
 import {showSuccess} from './success-notice';
 import DeleteItem from './delete-item';
 import {useEffect,useState} from 'react';
-import {offices} from './offices';
+import {useOffices} from './offices';
 import {sections,sectionFor,type ITSection} from './it-sections';
 import {teamLabel} from './team-assignment';
 import PrioritySelect from './priority-select';
@@ -30,6 +30,7 @@ const projectLabel=(id:number)=>'PRJ-'+String(id).padStart(6,'0');
 const createdDate=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Dhaka',dateStyle:'medium',timeStyle:'short'});
 
 export default function Projects({me,team}:{me:Officer&{manager:number};team:Officer[]}){
+ const offices=useOffices();
  const [projects,setProjects]=useState<Project[]>(),[filter,setFilter]=useState<typeof filters[number]>('All projects');
  const [updateDraft,setUpdateDraft]=useState('');
  const [formRevision,setFormRevision]=useState(0);

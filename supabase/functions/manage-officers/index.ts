@@ -45,8 +45,9 @@ export function createHandler(env:Environment,clientFactory=createClient){
    if(departmentRole!=='member'&&departmentRole!=='manager')return reply(400,{error:'Select a department role'});
    const designation=values.designation??'Officer';
    const offices=values.offices;
-   const allowedOffices=['FMCG','Rangpur Area Office','Khulna Area Office','Kushtia Area Office','Mymensingh Area Office','Mymensing Pharma','32 Bigha Project'];
-   if(!Array.isArray(offices)||!offices.length||offices.length>7||offices.some(o=>typeof o!=='string'||!allowedOffices.includes(o)))return reply(400,{error:'Select at least one valid responsible office / area'});
+   const {data:allowedOffices,error:areasError}=await caller.rpc('desk_coverage_areas');
+   if(areasError||!Array.isArray(allowedOffices))return reply(500,{error:'Could not load ICT coverage areas'});
+   if(!Array.isArray(offices)||!offices.length||offices.some(o=>typeof o!=='string'||!allowedOffices.includes(o)))return reply(400,{error:'Select at least one valid responsible office / area'});
    if(!['Officer','Sr. Officer','Executive','Sr. Executive','Asst Manager','Deputy Manager','Manager','AGM','GM','Others'].includes(String(designation)))return reply(400,{error:'Select a designation'});
    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)||email.length>250||!name||name.length>150)return reply(400,{error:'Enter a name and valid email'});
    if(password.length<8||new TextEncoder().encode(password).length>72)return reply(400,{error:'Password must be at least 8 characters and no more than 72 bytes'});

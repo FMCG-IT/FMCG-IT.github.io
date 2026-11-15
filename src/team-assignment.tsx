@@ -1,8 +1,9 @@
-import {offices} from './offices';
+import {useOffices} from './offices';
 import {useState} from 'react';
 import {sections,sectionFor,type ITSection} from './it-sections';
 export const teamLabel=(team:string)=>team==='Software/System'?'System/Software':team;
 export default function TeamAssignment({officers,initialOfficer,initialTeam,initialOffice=''}:{officers:any[];initialOfficer?:string;initialTeam?:ITSection;initialOffice?:string}){
+ const offices=useOffices();
  const [office,setOffice]=useState(initialOffice);
  const [team,setTeam]=useState<ITSection>(()=>initialTeam??sectionFor(officers.find(o=>o.id===initialOfficer)?.specialty??'Software/System'));
  const [officer,setOfficer]=useState(initialOfficer??'');

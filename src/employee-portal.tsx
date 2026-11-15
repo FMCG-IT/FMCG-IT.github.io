@@ -1,10 +1,11 @@
 import {useEffect,useState} from 'react';
 import {employeeTickets,signOut,type EmployeeTicket} from './backend';
-import {offices} from './offices';
+import {useOffices} from './offices';
 import {sections} from './it-sections';
 import {teamLabel} from './team-assignment';
 
 export default function EmployeePortal(){
+ const offices=useOffices();
  const [tickets,setTickets]=useState<EmployeeTicket[]>();
  const [error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false);
  useEffect(()=>{

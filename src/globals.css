@@ -425,3 +425,8 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
  .support-hero{position:relative}
  .support-hero>.support-actions{position:absolute;top:41%;left:57%;max-width:35%}
 }
+
+.support-home .primary{background:#0e6776;border:1px solid #82dadd;color:#fff}
+.support-home .secondary{background:#122d44ee;border:1px solid #82bac9;color:#e9fbff}
+.support-home .primary:hover{background:#087888}
+.support-home .secondary:hover{background:#1a405a}

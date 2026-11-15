@@ -1,10 +1,12 @@
+import GuestTickets from './guest-tickets';
+import EmployeePortal from './employee-portal';
 import {ticketLabel} from './ticket-label';
 import {useEffect,useState,type FormEvent} from 'react';
 import {createRoot} from 'react-dom/client';
 import {Monitor} from 'lucide-react';
 import type {Session} from '@supabase/supabase-js';
 import Desk from './desk';
-import {appUrl,supabase} from './backend';
+import {appUrl,supabase,readPortalAccess,signOut} from './backend';
 import {sections,sectionSlug} from './it-sections';
 import {statuses} from './ticket-status';
 import './globals.css';
@@ -37,7 +39,7 @@ function Auth({mode,setMode}:{mode:Mode;setMode:(m:Mode)=>void}){
  <button className="primary" disabled={busy}>{busy?'Please wait…':label}</button>
  </form>
  {message&&<p role="status">{message}</p>}
- {mode==='login'?<div className="auth-actions"><button className="text-button" onClick={()=>{setMessage('');setMode('forgot')}}>Forgot password?</button></div>:<button className="text-button" onClick={()=>{setMessage('');setMode('login')}}>Back to sign in</button>}
+ {mode==='login'?<div className="auth-actions"><a className="text-button" href="#/submit-ticket">Submit a ticket</a><button className="text-button" onClick={()=>{setMessage('');setMode('forgot')}}>Forgot password?</button></div>:<button className="text-button" onClick={()=>{setMessage('');setMode('login')}}>Back to sign in</button>}
  </main>;
 }
 
@@ -68,6 +70,15 @@ function Track({token}:{token:string}){
 
 function App(){
  const [route,setRoute]=useState(location.hash.slice(1)||'/'),[mode,setMode]=useState<Mode>('login'),[session,setSession]=useState<Session|null|undefined>(),[callbackError,setCallbackError]=useState('');
+ const [portal,setPortal]=useState<{user:string;access:string}>();
+ const userId=session?.user.id;
+ useEffect(()=>{
+  if(!userId)return;
+  let active=true;
+  void readPortalAccess().then(access=>{if(active)setPortal({user:userId,access});})
+   .catch(()=>{if(active)setPortal({user:userId,access:'error'});});
+  return ()=>{active=false;};
+ },[userId]);
  useEffect(()=>{
   const handleRoute=()=>setRoute(location.hash.slice(1)||'/');
   window.addEventListener('hashchange',handleRoute);
@@ -86,9 +97,15 @@ function App(){
   return ()=>{window.removeEventListener('hashchange',handleRoute);subscription.unsubscribe();};
  },[]);
  if(!supabase)return <main className="setup"><h1>Set up IT Desk</h1><p>Configure the Supabase URL and publishable key, then rebuild.</p></main>;
+ if(route==='/submit-ticket')return <GuestTickets key={route}/>;
+ const trackingKey=route.match(/^\/request\/([0-9a-f-]{36})$/i)?.[1];
+ if(trackingKey)return <GuestTickets key={route} token={trackingKey}/>;
  if(route.startsWith('/track/'))return <Track key={route} token={route.slice(7)}/>;
  if(session===undefined)return <main className="loading">Loading IT Desk…</main>;
  if(!session||mode==='reset')return <>{callbackError&&<p role="alert" className="error">{callbackError}</p>}<Auth mode={mode} setMode={setMode}/></>;
+ if(!portal||portal.user!==userId)return <main className="loading">Opening IT Desk…</main>;
+ if(portal.access==='employee')return <EmployeePortal key={userId}/>;
+ if(portal.access!=='it')return <main className="setup"><p role="alert">{portal.access==='error'?'Could not check IT Desk access.':'Use your approved company Microsoft 365 account.'}</p><button className="secondary" onClick={()=>{setPortal(undefined);void signOut();}}>Back to sign in</button></main>;
  const teamPage=route.startsWith('/team/');
  const section=sections.find(s=>route===(teamPage?'/team/':'/sections/')+sectionSlug(s));
  const initialOfficer=route.match(/^\/officers\/([0-9a-f-]{36})$/i)?.[1];

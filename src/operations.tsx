@@ -1,3 +1,4 @@
+import {intakeQueue,type IntakeTicket} from './backend';
 import {showSuccess} from './success-notice';
 import {readProjectNotifications,readProjectReminders,type ProjectReminder} from './backend';
 import {useEffect,useState,useRef} from 'react';
@@ -45,7 +46,14 @@ export function Notifications({openTicket,workApprovals=0,onItemsChanged}:{openT
   catch(e){setError(e instanceof Error?e.message:'Could not review project.');}
   finally{setReviewing(false);}
  }
- const total=reminders.length+projectInbox.unread+data.unread+workApprovals+deletions.length+results.length+projectRequests.length;
+ const [intake,setIntake]=useState<IntakeTicket[]>([]);
+ useEffect(()=>{
+  let active=true;
+  const refresh=()=>void intakeQueue().then(rows=>{if(active)setIntake(rows);}).catch(()=>{});
+  refresh();const timer=setInterval(refresh,30000);
+  return ()=>{active=false;clearInterval(timer);};
+ },[]);
+ const total=intake.length+reminders.length+projectInbox.unread+data.unread+workApprovals+deletions.length+results.length+projectRequests.length;
  useEffect(()=>{let active=true;const refresh=()=>{if(document.visibilityState==='hidden')return;void readNotifications().then(r=>{if(active){setData(r);setError('')}}).catch((e:Error)=>{if(active)setError(e.message)});};refresh();const timer=setInterval(refresh,30000);document.addEventListener('visibilitychange',refresh);return()=>{active=false;clearInterval(timer);document.removeEventListener('visibilitychange',refresh)}},[]);
  useEffect(()=>{
   if(!open)return;
@@ -63,7 +71,21 @@ export function Notifications({openTicket,workApprovals=0,onItemsChanged}:{openT
  }}>{item.message}<small>{new Date(item.updated_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} BDT</small></button>})),
   ...data.items.map(item=>({item,element:<button key={'ticket-'+item.ticket} className={'notification-item'+(!item.read_at?' unread':'')} onClick={()=>void select(item)}>{item.message}<small>{new Date(item.updated_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} BDT</small></button>})),
  ].sort((a,b)=>Number(!!a.item.read_at)-Number(!!b.item.read_at)||Date.parse(b.item.updated_at)-Date.parse(a.item.updated_at));
- return <div ref={container} className="notifications"><button className="secondary" aria-expanded={open} onClick={()=>setOpen(!open)}>Notifications {total>0&&<b className="notification-count">({total})</b>}</button>{open&&<section className="panel notification-list"><h3>Notifications</h3>{projectRequests.map(project=><article className="notification-item unread" key={project.id}>
+ return <div ref={container} className="notifications"><button className="secondary" aria-expanded={open} onClick={()=>setOpen(!open)}>Notifications {total>0&&<b className="notification-count">({total})</b>}</button>{open&&<section className="panel notification-list"><h3>Notifications</h3>{intake.map(ticket=><details className="notification-item unread" key={'intake-'+ticket.id}>
+ <summary>New employee ticket · {ticket.subject}</summary>
+ <small>{ticket.employee} · {ticket.email} · {ticket.office} · {ticket.team}</small><p>{ticket.description}</p>
+ {ticket.officers.length?<form onSubmit={async e=>{
+  e.preventDefault();if(reviewing)return;
+  const officer=String(new FormData(e.currentTarget).get('officer')??'');
+  setReviewing(true);setError('');
+  try{setIntake(await intakeQueue(ticket.id,officer));onItemsChanged();showSuccess('Ticket assigned successfully');}
+  catch(e){setError(e instanceof Error?e.message:'Could not assign ticket');}
+  finally{setReviewing(false);}
+ }}>
+  <label>Assign to<select name="officer" required defaultValue=""><option value="">Select officer</option>{ticket.officers.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></label>
+  <button className="primary" disabled={reviewing}>Assign ticket</button>
+ </form>:<small>No active officer covers this team and office.</small>}
+ </details>)}{projectRequests.map(project=><article className="notification-item unread" key={project.id}>
  <details><summary>New project approval · {project.subject}</summary>
  <small>{project.creator} · Assigned to {project.assignee}</small>
  <small>{project.office} · {project.team} · {project.priority} · Deadline {project.deadline}</small>
@@ -80,7 +102,7 @@ export function Notifications({openTicket,workApprovals=0,onItemsChanged}:{openT
  setOpen(false);
  if(location.hash==='#/regular-work/approvals')document.getElementById('work-approvals')?.scrollIntoView({block:'start'});
  else location.hash='/regular-work/approvals';
- }}>{workApprovals} regular work approval {workApprovals===1?'request':'requests'}</button>}<small>Recent ticket and project activity · refreshes every 30 seconds</small>{error&&<p className="error" role="alert">{error}</p>}{!data.items.length&&!projectInbox.items.length&&!reminders.length&&!error&&!workApprovals&&!deletions.length&&!results.length&&!projectRequests.length&&<p>No notifications yet.</p>}{reminders.map(item=><button type="button" key={item.project+'-'+item.kind+'-'+item.day} className={'notification-item unread'+(item.kind==='progress'?'':' project-reminder-urgent')} onClick={async()=>{
+ }}>{workApprovals} regular work approval {workApprovals===1?'request':'requests'}</button>}<small>Recent ticket and project activity · refreshes every 30 seconds</small>{error&&<p className="error" role="alert">{error}</p>}{!data.items.length&&!projectInbox.items.length&&!reminders.length&&!error&&!workApprovals&&!deletions.length&&!results.length&&!projectRequests.length&&!intake.length&&<p>No notifications yet.</p>}{reminders.map(item=><button type="button" key={item.project+'-'+item.kind+'-'+item.day} className={'notification-item unread'+(item.kind==='progress'?'':' project-reminder-urgent')} onClick={async()=>{
   try{setReminders(await readProjectReminders(item));setOpen(false);location.hash='/projects/'+item.project;}
   catch(e){setError(e instanceof Error?e.message:'Could not open reminder');}
  }}>{item.message}<small>Deadline {item.deadline} (BDT)</small></button>)}{activity.map(entry=>entry.element)}</section>}</div>;

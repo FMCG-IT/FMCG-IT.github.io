@@ -406,3 +406,7 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
 .project-filters button.project-filter-overdue{background:#b91c32;color:#fff;border-color:#a1182b}
 .project-filters button.project-filter-overdue:hover{background:#9f172b}
 .project-filters .project-filter-overdue .project-filter-count{background:#ffffff30;color:#fff}
+
+.employee-portal{max-width:900px;margin:auto;display:grid;gap:16px;padding-bottom:20px}
+.employee-portal summary,.notification-list details>summary{cursor:pointer}
+.employee-portal .event p,.notification-list details>p{white-space:pre-wrap;overflow-wrap:anywhere}

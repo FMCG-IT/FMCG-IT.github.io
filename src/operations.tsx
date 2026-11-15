@@ -54,6 +54,15 @@ export function Notifications({openTicket,workApprovals=0,onItemsChanged}:{openT
   return ()=>document.removeEventListener('pointerdown',dismiss,true);
  },[open]);
  async function select(item:typeof data.items[number]){openTicket(item.ticket);setOpen(false);try{setData(await readNotifications(item.ticket,item.updated_at))}catch(e){setError(e instanceof Error?e.message:'Could not mark as read')}}
+ const activity=[
+  ...projectInbox.items.map(item=>({item,element:<button key={'project-'+item.project} type="button" className={'notification-item'+(!item.read_at?' unread':'')} onClick={async()=>{
+  setOpen(false);
+  try{setProjectInbox(await readProjectNotifications(item.project,item.updated_at));}
+  catch(e){setError(e instanceof Error?e.message:'Could not mark as read');}
+  location.hash='/projects/'+item.project;
+ }}>{item.message}<small>{new Date(item.updated_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} BDT</small></button>})),
+  ...data.items.map(item=>({item,element:<button key={'ticket-'+item.ticket} className={'notification-item'+(!item.read_at?' unread':'')} onClick={()=>void select(item)}>{item.message}<small>{new Date(item.updated_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} BDT</small></button>})),
+ ].sort((a,b)=>Number(!!a.item.read_at)-Number(!!b.item.read_at)||Date.parse(b.item.updated_at)-Date.parse(a.item.updated_at));
  return <div ref={container} className="notifications"><button className="secondary" aria-expanded={open} onClick={()=>setOpen(!open)}>Notifications {total>0&&<b className="notification-count">({total})</b>}</button>{open&&<section className="panel notification-list"><h3>Notifications</h3>{projectRequests.map(project=><article className="notification-item unread" key={project.id}>
  <details><summary>New project approval · {project.subject}</summary>
  <small>{project.creator} · Assigned to {project.assignee}</small>
@@ -74,12 +83,7 @@ export function Notifications({openTicket,workApprovals=0,onItemsChanged}:{openT
  }}>{workApprovals} regular work approval {workApprovals===1?'request':'requests'}</button>}<small>Recent ticket and project activity · refreshes every 30 seconds</small>{error&&<p className="error" role="alert">{error}</p>}{!data.items.length&&!projectInbox.items.length&&!reminders.length&&!error&&!workApprovals&&!deletions.length&&!results.length&&!projectRequests.length&&<p>No notifications yet.</p>}{reminders.map(item=><button type="button" key={item.project+'-'+item.kind+'-'+item.day} className={'notification-item unread'+(item.kind==='progress'?'':' project-reminder-urgent')} onClick={async()=>{
   try{setReminders(await readProjectReminders(item));setOpen(false);location.hash='/projects/'+item.project;}
   catch(e){setError(e instanceof Error?e.message:'Could not open reminder');}
- }}>{item.message}<small>Deadline {item.deadline} (BDT)</small></button>)}{projectInbox.items.map(item=><button key={item.project} type="button" className={'notification-item'+(!item.read_at?' unread':'')} onClick={async()=>{
-  setOpen(false);
-  try{setProjectInbox(await readProjectNotifications(item.project,item.updated_at));}
-  catch(e){setError(e instanceof Error?e.message:'Could not mark as read');}
-  location.hash='/projects/'+item.project;
- }}>{item.message}<small>{new Date(item.updated_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} BDT</small></button>)}{data.items.map(item=><button key={item.ticket} className={'notification-item'+(!item.read_at?' unread':'')} onClick={()=>void select(item)}>{item.message}<small>{new Date(item.updated_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} BDT</small></button>)}</section>}</div>;
+ }}>{item.message}<small>Deadline {item.deadline} (BDT)</small></button>)}{activity.map(entry=>entry.element)}</section>}</div>;
 }
 export function ManagerTransfer({team,onDone}:{team:any[];onDone:()=>Promise<void>}){
  const [target,setTarget]=useState(''),[confirmation,setConfirmation]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[open,setOpen]=useState(false);

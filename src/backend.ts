@@ -89,7 +89,7 @@ async function deskRpc<T>(name:string,args?:Record<string,unknown>):Promise<T>{
  if(error)throw Error(error.message);
  return data as T;
 }
-export const readWorkSummary=()=>deskRpc<{today:string;count:number;approvals:number}>('desk_regular_work_summary');
+export const readWorkSummary=()=>deskRpc<{today:string;count:number;approvals:number;pending_daily?:number}>('desk_regular_work_summary');
 export const readRegularWork=(from:string|null,to:string|null)=>deskRpc<import('./regular-work').WorkData>('desk_regular_work_read',{p_from:from,p_to:to});
 export const writeRegularWork=(p:Record<string,unknown>)=>deskRpc<void>('desk_regular_work_write',{p});
 

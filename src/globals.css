@@ -395,3 +395,10 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
 
 .notification-item.unread.project-reminder-urgent{background:#fff0ed;color:#9e2635;border-left:3px solid #bc3042}
 .report-officers .ticket-overdue a{color:inherit}
+
+.shell .stat.regular-work-stat.daily-pending{background:#b91c32;border-color:#a1182b;color:#fff}
+.shell .stat.regular-work-stat.daily-pending:hover{background:#9f172b}
+.shell .stat.regular-work-stat.daily-pending :is(span,strong,small,svg){color:#fff}
+
+.notification-list .notification-item.unread,
+.notification-list .notification-item.unread :is(a,b,summary,small,p){color:#111;font-weight:750}

@@ -20,9 +20,22 @@ export function createHandler(env:Environment,clientFactory=createClient){
    const {data:identity,error:identityError}=await caller.auth.getUser(authorization.slice(7));
    if(identityError||!identity.user)return reply(401,{error:'Please sign in again'});
    const {data:allowed,error:permissionError}=await caller.rpc('desk_can_manage_accounts');
-   if(permissionError||allowed!==true)return reply(403,{error:'Only an IT Manager can create accounts'});
+   if(permissionError||allowed!==true)return reply(403,{error:'Only an IT Manager can manage accounts'});
    let values:Record<string,unknown>;
    try{values=await request.json()}catch{return reply(400,{error:'Invalid request'})}
+   if(values?.action==='reset_password'){
+    const officer=values.officer;
+    const password=values.password;
+    if(typeof officer!=='string'||!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(officer))return reply(400,{error:'Select a member'});
+    if(typeof password!=='string'||password.length<8||new TextEncoder().encode(password).length>72)return reply(400,{error:'Password must be at least 8 characters and no more than 72 bytes'});
+    const admin=clientFactory(env.SUPABASE_URL,secretKey,{auth:{persistSession:false,autoRefreshToken:false}});
+    const {data:account,error:lookupError}=await admin.rpc('desk_member_reset_account',{p_actor:identity.user.id,p_officer:officer});
+    if(lookupError)return reply(lookupError.code==='42501'?403:500,{error:'Could not verify the member account'});
+    if(!account)return reply(404,{error:'No active member login found'});
+    const {error}=await admin.auth.admin.updateUserById(account,{password});
+    if(error)return reply(400,{error:'Could not reset the password. Check the project password requirements.'});
+    return reply(200,{updated:true});
+   }
    const email=typeof values.email==='string'?values.email.trim().toLowerCase():'';
    const name=typeof values.name==='string'?values.name.trim():'';
    const password=typeof values.password==='string'?values.password:'';
@@ -55,7 +68,7 @@ export function createHandler(env:Environment,clientFactory=createClient){
     return reply(500,{error:rollbackError?'Account was created but team access could not be saved. Contact the Supabase project administrator.':'Could not save team access. No account was kept; please try again.'});
    }
    return reply(201,{id:accountId,email,restored:Boolean(archivedAccount)});
-  }catch{return reply(500,{error:'Could not create the account. Please try again.'})}
+  }catch{return reply(500,{error:'Could not manage the account. Please try again.'})}
  };
 }
 

@@ -15,8 +15,8 @@ export async function readDesk(){
 }
 export async function writeDesk(payload:Record<string,unknown>){
  if(!supabase)throw Error('Supabase is not configured.');
- if(payload.action==='officer'){
-  const {data,error}=await supabase.functions.invoke('manage-officers',{body:{name:payload.name,email:payload.email,password:payload.password,specialty:payload.specialty,designation:payload.designation,offices:payload.offices}});
+ if(payload.action==='officer'||payload.action==='reset_password'){
+  const {data,error}=await supabase.functions.invoke('manage-officers',{body:{action:payload.action,officer:payload.officer,name:payload.name,email:payload.email,password:payload.password,specialty:payload.specialty,designation:payload.designation,offices:payload.offices}});
   if(error){
    let message=error.message;
    if('context' in error && error.context instanceof Response){

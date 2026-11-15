@@ -123,4 +123,13 @@ function App(){
  const initialStatus=statuses.find(status=>route===(portalPage?'/my/':'/tickets/')+status.toLowerCase().replaceAll(' ','-'));
  return <Desk key={route} section={section} teamPage={teamPage} projectPage={route==='/projects'||/^\/projects\/\d+$/.test(route)} storagePage={route==='/storage'} reportsPage={route==='/reports'} workPage={route==='/regular-work'||route==='/regular-work/report'||route==='/regular-work/approvals'} portalPage={portalPage} initialStatus={initialStatus} initialOfficer={initialOfficer}/>;
 }
+document.addEventListener('invalid',event=>{
+ const field=event.target;
+ if(field instanceof HTMLInputElement||field instanceof HTMLSelectElement||field instanceof HTMLTextAreaElement){
+  field.form?.classList.add('validation-attempted');
+ }
+},true);
+document.addEventListener('reset',event=>{
+ if(event.target instanceof HTMLFormElement)event.target.classList.remove('validation-attempted');
+});
 createRoot(document.getElementById('root')!).render(<App/>);

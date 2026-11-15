@@ -31,13 +31,13 @@ export default function GuestTickets({token,list=false}:{token?:string;list?:boo
     e.preventDefault();if(busy||!supabase)return;
     const p=Object.fromEntries(new FormData(e.currentTarget));
     setBusy(true);setError('');
-    try{const {data,error}=await supabase.rpc('desk_submit_guest_ticket',{p});if(error)throw error;setKey(data);setSuccess(true);try{localStorage.setItem(storageKey,JSON.stringify([{key:data,subject:String(p.subject)},...savedTickets()]));}catch{/* The private link remains available to copy. */}}
+    try{const {data,error}=await supabase.rpc('desk_submit_guest_ticket',{p});if(error){if(error.message==='Please enter your company email.') {setError(error.message);return;}throw error;}setKey(data);setSuccess(true);try{localStorage.setItem(storageKey,JSON.stringify([{key:data,subject:String(p.subject)},...savedTickets()]));}catch{/* The private link remains available to copy. */}}
     catch{setError('Could not submit the ticket. Check the form and try again.');}
     finally{setBusy(false);}
    }}>
     <div className="compact-field-grid">
     <label>Name<input name="name" required maxLength={200} autoComplete="name"/></label>
-    <label>Email<input name="email" type="email" required maxLength={254} autoComplete="email"/></label>
+    <label>Email<input name="email" type="email" required maxLength={254} autoComplete="email" pattern="[^@\s]+@[sS][mM][cC]-[bB][dD][.][oO][rR][gG]" onInvalid={e=>{const field=e.currentTarget;if(field.value)field.setCustomValidity('Please enter your company email.');}} onInput={e=>e.currentTarget.setCustomValidity('')}/></label>
     <label className="compact-field-full">Subject<input name="subject" required maxLength={200}/></label>
     <label className="compact-field-full">Description<textarea name="description" required maxLength={10000} rows={4}/></label>
     <label>Team<select name="team" required defaultValue=""><option value="">Select team</option>{sections.map(team=><option key={team} value={team}>{teamLabel(team)}</option>)}</select></label>

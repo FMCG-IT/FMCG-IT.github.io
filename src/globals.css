@@ -477,7 +477,7 @@ form>.form-submit-bar,form>.work-actions:has(>button.primary){
  padding:8px 0;margin-top:8px;background:#fff;
 }
 form>.form-submit-bar button,form>.work-actions:has(>button.primary) button{margin:0}
-form :is(input,select,textarea):required:invalid{
+form.validation-attempted :is(input,select,textarea):required:invalid{
  background:#fff2f3;border-color:#e7a4ae;scroll-margin:12px 0 64px;
 }
 .office-options-invalid{background:#fff2f3;outline:1px solid #e7a4ae}

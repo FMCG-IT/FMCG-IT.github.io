@@ -437,3 +437,23 @@ body{background:#e8eff8 linear-gradient(#f1f5fbd9,#eef4f9d9) center/cover fixed;
 .page-heading-actions>.primary{width:100%;justify-content:center}
 :where(button,a):is(.primary,.secondary){min-height:40px;padding-block:8px;justify-content:center}
 @media(max-width:480px){.page-heading-actions{width:100%}}
+
+.overlay .dialog{width:min(740px,100%);max-height:calc(100dvh - 36px);padding:18px 22px;overflow:auto}
+.dialog h2{margin-block:0 8px}
+.dialog form label{margin-block:8px}
+.dialog form :is(input:not([type=checkbox]),select,textarea){margin-top:4px;padding:7px 10px;min-height:34px}
+.dialog form textarea{height:64px;min-height:52px}
+.dialog form .form-row{gap:8px 12px}
+.dialog .office-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 12px;margin-top:8px;padding:5px 10px}
+.dialog .office-fields .checkbox{margin:2px 0}
+.overlay .coverage-dialog{width:min(880px,100%)}
+.coverage-dialog table{width:100%;min-width:0}
+.coverage-dialog :is(th,td){padding:6px 9px;vertical-align:middle}
+.coverage-dialog td{overflow-wrap:anywhere}
+.coverage-dialog .work-actions{display:flex;flex-wrap:nowrap;gap:6px}
+.coverage-dialog .work-actions button{margin:0;padding:4px 8px;min-height:30px}
+@media(max-width:520px){
+ .overlay .dialog{padding:14px;max-height:calc(100dvh - 40px)}
+ .dialog .office-fields{grid-template-columns:1fr}
+ .coverage-dialog .work-actions{flex-wrap:wrap}
+}

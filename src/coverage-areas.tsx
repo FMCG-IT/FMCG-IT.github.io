@@ -14,7 +14,7 @@ export default function CoverageAreas({team,onClose,onChange}:{team:{id:string;n
   catch(e){setError(e instanceof Error?e.message:'Could not delete coverage area.');}
   finally{setBusy(false);}
  }
- return <div className="overlay"><section className="dialog" role="dialog" aria-modal="true" aria-labelledby="coverage-title">
+ return <div className="overlay"><section className="dialog coverage-dialog" role="dialog" aria-modal="true" aria-labelledby="coverage-title">
   <div className="section-head"><h2 id="coverage-title">ICT Coverage Areas</h2><button type="button" className="text-button" disabled={busy} onClick={onClose}>Close</button></div>
   <form key={editing??'new'} onSubmit={async e=>{
    e.preventDefault();if(busy)return;

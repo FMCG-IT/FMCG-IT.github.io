@@ -12,6 +12,8 @@ function savedTickets():SavedTicket[]{
 }
 export default function GuestTickets({token,list=false}:{token?:string;list?:boolean}){
  const offices=useOffices();
+ const [success,setSuccess]=useState(false);
+ useEffect(()=>{if(!success)return;const timer=setTimeout(()=>setSuccess(false),5000);return ()=>clearTimeout(timer);},[success]);
  const [key,setKey]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  const [ticket,setTicket]=useState<{subject:string;status:string;updates:{id:string;body:string}[]}|null>();
  useEffect(()=>{
@@ -29,7 +31,7 @@ export default function GuestTickets({token,list=false}:{token?:string;list?:boo
     e.preventDefault();if(busy||!supabase)return;
     const p=Object.fromEntries(new FormData(e.currentTarget));
     setBusy(true);setError('');
-    try{const {data,error}=await supabase.rpc('desk_submit_guest_ticket',{p});if(error)throw error;setKey(data);try{localStorage.setItem(storageKey,JSON.stringify([{key:data,subject:String(p.subject)},...savedTickets()]));}catch{/* The private link remains available to copy. */}}
+    try{const {data,error}=await supabase.rpc('desk_submit_guest_ticket',{p});if(error)throw error;setKey(data);setSuccess(true);try{localStorage.setItem(storageKey,JSON.stringify([{key:data,subject:String(p.subject)},...savedTickets()]));}catch{/* The private link remains available to copy. */}}
     catch{setError('Could not submit the ticket. Check the form and try again.');}
     finally{setBusy(false);}
    }}>
@@ -43,5 +45,6 @@ export default function GuestTickets({token,list=false}:{token?:string;list?:boo
    </form>}
    {error&&<p className="error" role="alert">{error}</p>}
   </section>
+  {success&&<div className="creation-success" role="status">Ticket submitted successfully</div>}
  </main>;
 }

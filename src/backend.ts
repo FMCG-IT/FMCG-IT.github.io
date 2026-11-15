@@ -146,3 +146,5 @@ export const readPasswordRequests=()=>deskRpc<{id:string;name:string}[]>('desk_p
 
 export const readCoverageAreas=()=>deskRpc<string[]>('desk_coverage_areas');
 export const addCoverageArea=(name:string)=>deskRpc<void>('desk_add_coverage_area',{p_name:name});
+
+export const manageCoverageArea=(oldName:string,newName:string|null)=>deskRpc<void>('desk_manage_coverage_area',{p_old:oldName,p_new:newName});

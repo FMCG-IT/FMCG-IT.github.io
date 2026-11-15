@@ -430,3 +430,10 @@ select.priority-select option{font-weight:750;color:var(--priority-ink,#384762);
 .support-home .secondary{background:#122d44ee;border:1px solid #82bac9;color:#e9fbff}
 .support-home .primary:hover{background:#087888}
 .support-home .secondary:hover{background:#1a405a}
+
+body{background:#e8eff8 linear-gradient(#f1f5fbd9,#eef4f9d9) center/cover fixed;background-image:linear-gradient(#f1f5fbc9,#eef4f9d9),url('./assets/support-hero.webp');background-position:center;background-size:cover;background-repeat:no-repeat;background-attachment:fixed}
+.page-heading-actions{display:grid;gap:8px;margin-left:auto;width:min(100%,220px)}
+.page-heading-actions:empty{display:none}
+.page-heading-actions>.primary{width:100%;justify-content:center}
+:where(button,a):is(.primary,.secondary){min-height:40px;padding-block:8px;justify-content:center}
+@media(max-width:480px){.page-heading-actions{width:100%}}

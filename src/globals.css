@@ -457,3 +457,12 @@ body{background:#e8eff8 linear-gradient(#f1f5fbd9,#eef4f9d9) center/cover fixed;
  .dialog .office-fields{grid-template-columns:1fr}
  .coverage-dialog .work-actions{flex-wrap:wrap}
 }
+
+.compact-field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 14px;align-items:start}
+.compact-field-full{grid-column:1/-1}
+.dialog form .compact-field-grid label,.employee-portal .compact-field-grid label{min-width:0;margin:3px 0}
+.compact-field-grid small{display:block;margin-top:3px}
+.employee-portal .compact-field-grid :is(input,select,textarea){margin-top:4px;padding:8px 10px}
+.employee-portal .compact-field-grid textarea{min-height:72px;height:72px}
+.overlay .dialog:has(.compact-field-grid)>.section-head+p{margin:4px 0 8px}
+@media(max-width:520px){.compact-field-grid{grid-template-columns:minmax(0,1fr)}}

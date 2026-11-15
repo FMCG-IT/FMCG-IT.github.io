@@ -35,12 +35,14 @@ export default function GuestTickets({token,list=false}:{token?:string;list?:boo
     catch{setError('Could not submit the ticket. Check the form and try again.');}
     finally{setBusy(false);}
    }}>
+    <div className="compact-field-grid">
     <label>Name<input name="name" required maxLength={200} autoComplete="name"/></label>
     <label>Email<input name="email" type="email" required maxLength={254} autoComplete="email"/></label>
-    <label>Subject<input name="subject" required maxLength={200}/></label>
-    <label>Description<textarea name="description" required maxLength={10000} rows={4}/></label>
+    <label className="compact-field-full">Subject<input name="subject" required maxLength={200}/></label>
+    <label className="compact-field-full">Description<textarea name="description" required maxLength={10000} rows={4}/></label>
     <label>Team<select name="team" required defaultValue=""><option value="">Select team</option>{sections.map(team=><option key={team} value={team}>{teamLabel(team)}</option>)}</select></label>
     <label>Office / area<select name="office" required defaultValue=""><option value="">Select office / area</option>{offices.map(office=><option key={office}>{office}</option>)}</select></label>
+    </div>
     <button className="primary" disabled={busy}>Submit ticket</button>
    </form>}
    {error&&<p className="error" role="alert">{error}</p>}

@@ -43,7 +43,7 @@ function Auth({mode,setMode}:{mode:Mode;setMode:(m:Mode)=>void}){
  <button className="primary" disabled={busy}>{busy?'Please wait…':label}</button>
  </form>
  {message&&<p role="status">{message}</p>}
- {mode==='login'?<div className="auth-actions"><a className="text-button" href="#/submit-ticket">Submit a ticket</a><button className="text-button" onClick={()=>{setMessage('');setMode('forgot')}}>Forgot password?</button></div>:<button className="text-button" onClick={()=>{setMessage('');setMode('login')}}>Back to sign in</button>}
+ {mode==='login'?<div className="auth-actions"><button className="text-button" onClick={()=>{setMessage('');setMode('forgot')}}>Forgot password?</button></div>:<button className="text-button" onClick={()=>{setMessage('');setMode('login')}}>Back to sign in</button>}
  </main>;
 }
 

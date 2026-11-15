@@ -1,3 +1,4 @@
+import {MobileContact} from './contact-mobile';
 import {useEffect,useState} from 'react';
 import {intakeQueue,readPasswordRequests,writeDesk,type IntakeTicket} from './backend';
 
@@ -21,7 +22,7 @@ export default function StaffRequest({id,kind}:{id:string;kind:'ticket'|'passwor
   <a href="#/my">Back to IT Desk</a>
   <section className="panel">
    <h1>{kind==='ticket'?'Ticket details':'Password reset request'}</h1>
-   {ticket&&<><h2>{ticket.subject}</h2><p className="description">{ticket.description}</p><div className="facts"><span>Created by<b>{ticket.employee}</b></span><span>Email<b>{ticket.email}</b></span><span>Team<b>{ticket.team}</b></span><span>Office / area<b>{ticket.office}</b></span></div></>}
+   {ticket&&<><h2>{ticket.subject}</h2><p className="description">{ticket.description}</p><div className="facts"><span>Created by<b>{ticket.employee}</b></span><span>Email<b>{ticket.email}</b></span>{ticket.contact_mobile&&<MobileContact number={ticket.contact_mobile}/>}<span>Team<b>{ticket.team}</b></span><span>Office / area<b>{ticket.office}</b></span></div></>}
    {member&&<h2>{member.name}</h2>}
    {!target&&!error&&<p>{loaded?'This request is no longer available.':'Loading request…'}</p>}
    {target&&!message&&<form onSubmit={async e=>{

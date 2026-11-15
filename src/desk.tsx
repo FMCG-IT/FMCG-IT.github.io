@@ -120,10 +120,11 @@ const ticketDetails=selected&&t?<><button className="text-button" onClick={()=>s
    <thead><tr>{sortableColumns.map(column=>{const active=sort.startsWith(column.key+'_');const direction=active?(sort.endsWith('_asc')?'ascending':'descending'):'none';return <th scope="col" key={column.key} aria-sort={direction}><button type="button" className={'column-sort'+(active?' active':'')} onClick={()=>setSort(nextTicketSort(sort,column.key,column.first))}>{column.label}<span aria-hidden="true">{active?(direction==='ascending'?'↑':'↓'):'↕'}</span></button></th>})}</tr></thead>
    <tbody>{visibleTickets.map((ticket:any)=>{
     const updatedAt=ticket.last_update_at??ticket.created;
+    const stale=ticket.status==='In progress'&&Date.now()-Date.parse(updatedAt)>=5*86400000;
     const comment=ticket.last_comment;
-    return <tr key={ticket.id} className={'ticket-row'+(overdue(ticket)?' ticket-overdue':'')} onClick={()=>{setError('');setCopied(false);setSelected(ticket.id)}}>
+    return <tr key={ticket.id} className={'ticket-row'+(overdue(ticket)||stale?' ticket-overdue':'')} onClick={()=>{setError('');setCopied(false);setSelected(ticket.id)}}>
     <td className="ticket-id">{ticketLabel(ticket)}</td>
-    <td><button className="ticket-title" onClick={e=>{e.stopPropagation();setError('');setCopied(false);setSelected(ticket.id)}}>{ticket.title}</button>{overdue(ticket)&&<small className="overdue-label">Overdue · {dhakaTime.format(new Date(automaticDueAt(ticket)))}</small>}</td>
+    <td><button className="ticket-title" onClick={e=>{e.stopPropagation();setError('');setCopied(false);setSelected(ticket.id)}}>{ticket.title}</button>{stale&&<small>No update for 5+ days</small>}{overdue(ticket)&&<small className="overdue-label">Overdue · {dhakaTime.format(new Date(automaticDueAt(ticket)))}</small>}</td>
     <td>{ticket.creator_name??'—'}</td>
     <td>{ticket.assignee_name??officerNames.get(ticket.assignee)}</td>
     <td><span className={'priority '+ticket.priority.toLowerCase()}><i className="dot"/>{priorityLabel(ticket.priority)}</span></td>
@@ -158,8 +159,9 @@ return <div className={'shell'+(freezeTicketList||view==='Reports'||(view==='Pro
  const stats=data.counts.sectionAlerts?.[group];
  const total=Number(stats?.active??officers.reduce((sum:number,o:any)=>sum+activeCount(o.id),0));
  const hasOverdue=!!stats?.earliest_due&&Date.parse(stats.earliest_due)<=Date.now();
- const needsAttention=total>50||hasOverdue;
- return <a key={group} className={'officer section-card'+(needsAttention?' section-alert':'')+(hasOverdue?' section-overdue':'')} title={needsAttention?[(total>50?'More than 50 active tickets':''),(hasOverdue?'Overdue ticket present':'')].filter(Boolean).join(' · '):undefined} href={(view==='IT team'?'#/team/':'#/sections/')+sectionSlug(group)}>
+ const tooManyNew=officers.reduce((sum:number,o:any)=>sum+memberCount(o.id,'New ticket'),0)>20;
+ const needsAttention=total>50||hasOverdue||tooManyNew;
+ return <a key={group} className={'officer section-card'+(needsAttention?' section-alert':'')+(hasOverdue||tooManyNew?' section-overdue':'')} title={needsAttention?[(total>50?'More than 50 active tickets':''),(hasOverdue?'Overdue ticket present':''),(tooManyNew?'More than 20 new tickets':'')].filter(Boolean).join(' · '):undefined} href={(view==='IT team'?'#/team/':'#/sections/')+sectionSlug(group)}>
  <ArrowUpRight className="officer-arrow" size={14} aria-hidden="true"/>
  <h3>{group}</h3><p>{view==='IT team'?officers.length+' members':total+' active '+(total===1?'ticket':'tickets')}</p>
  </a>;

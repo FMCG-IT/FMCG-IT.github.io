@@ -153,13 +153,15 @@ const passwordModal=modal==='own_password'&&<div className="overlay"><section cl
   e.preventDefault();
   if(busy)return;
   const fields=new FormData(e.currentTarget);
+  const currentPassword=String(fields.get('current_password')??'');
   const password=String(fields.get('new_password')??'');
   if(password!==fields.get('confirm_password')){setError('The passwords do not match.');return;}
   setBusy(true);setError('');
-  try{await changeOwnPassword(password);setModal('');showSuccess('Password updated successfully');}
+  try{await changeOwnPassword(currentPassword,password);setModal('');showSuccess('Password updated successfully');}
   catch(e){setError(e instanceof Error?e.message:'Could not change the password');}
   finally{setBusy(false);}
  }}>
+  <label>Current password<input name="current_password" type="password" required autoComplete="current-password"/></label>
   <label>New password<input name="new_password" type="password" required minLength={8} maxLength={72} autoComplete="new-password"/></label>
   <label>Confirm new password<input name="confirm_password" type="password" required minLength={8} maxLength={72} autoComplete="new-password"/></label>
   {error&&<p className="error" role="alert">{error}</p>}

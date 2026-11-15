@@ -119,9 +119,19 @@ export const readProjectReminders=(item?:ProjectReminder)=>deskRpc<ProjectRemind
  p_project:item?.project??null,p_kind:item?.kind??null,p_day:item?.day??null,
 });
 
-export async function changeOwnPassword(password:string){
+export async function changeOwnPassword(currentPassword:string,password:string){
  if(!supabase)throw Error('Supabase is not configured.');
  if(password.length<8||new TextEncoder().encode(password).length>72)throw Error('Use at least 8 characters and no more than 72 bytes.');
- const {error}=await supabase.auth.updateUser({password});
- if(error)throw Error(error.message);
+ if(!currentPassword)throw Error('Enter your current password.');
+ const {data:{user},error:identityError}=await supabase.auth.getUser();
+ if(identityError||!user?.email)throw Error('Sign in again to change your password.');
+ const verifier=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+ const {data,error:verifyError}=await verifier.auth.signInWithPassword({email:user.email,password:currentPassword});
+ if(verifyError||!data.session||data.user?.id!==user.id)throw Error('Could not verify your current password.');
+ try{
+  const {error}=await verifier.auth.updateUser({password,current_password:currentPassword});
+  if(error)throw Error(error.message);
+ }finally{
+  await verifier.auth.signOut({scope:'local'}).catch(()=>{});
+ }
 }
